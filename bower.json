@@ -1,0 +1,12 @@
+{
+  "name": "ng-improved-testing",
+  "version": "0.1.0-snapshot",
+  "dependencies": {
+    "angular": "1.2.16",
+    "ng-improved-modules": "https://github.com/evangalen/bower-ng-improved-modules.git#0.0.1-snapshot"
+  },
+  "devDependencies": {
+    "jasmine": "1.3.1",
+    "angular-mocks": "1.2.16"
+  }
+}
