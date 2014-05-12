@@ -4,6 +4,7 @@ describe('moduleBuilder service', function() {
 
     var moduleIntrospectorInstance = null;
     var ngImprovedTestingInjector;
+    var emptyInjector = angular.injector([]);
 
     beforeEach(function() {
         var ngImprovedModulesInjector = angular.injector(['ngImprovedModules']);
@@ -52,9 +53,9 @@ describe('moduleBuilder service', function() {
     var originalModuleInstance = angular.module('aModule', [])
         .value('mockableService', originalMockableService)
         .value('nonMockableService', originalNonMockableService)
-        .factory('aService', function($http, nonMockableService, mockableService) {
+        .factory('aService', ['$http', 'nonMockableService', 'mockableService', function() {
             return {};
-        });
+        }]);
 
 
 
@@ -144,13 +145,26 @@ describe('moduleBuilder service', function() {
             it('should create a service with mocked dependencies', function() {
                 var moduleBuilderInstance = moduleBuilder.forModule('aModule');
 
+                spyOn(angular.mock, 'module').andCallThrough();
+
                 moduleBuilderInstance.withServiceUsingMocks('aService').build();
+
+                var mockModuleArgs = angular.mock.module.mostRecentCall.args;
+                expect(mockModuleArgs.length).toBe(2);
+
+                expect(mockModuleArgs[0] instanceof Function).toBe(true);
+                expect(emptyInjector.annotate(mockModuleArgs[0])).toEqual(['$provide']);
+
+                var generatedModuleName = mockModuleArgs[1];
+                expect(generatedModuleName).toBe('generatedByNgImprovedTesting#1');
+                expect(angular.module(generatedModuleName)).toBeDefined();
 
                 inject(function($injector, aService, mockableServiceMock) {
                     expect(angular.isObject(aService)).toBe(true);
                     expect($injector.has('$http')).toBe(true);
                     expect($injector.has('nonMockableService')).toBe(true);
                     expect($injector.has('mockableService')).toBe(false);
+                    expect($injector.has('aResource')).toBe(false);
 
                     expect(mockableServiceMock.propertyFromMockableService)
                         .toBe(originalMockableService.propertyFromMockableService);

@@ -73,7 +73,15 @@ angular.module('ngImprovedTesting').factory('moduleBuilder', [
 
                 var serviceDeclaration = introspector.getServiceDeclaration(serviceName);
 
-                annotatedService.push(serviceDeclaration.declaration);
+                var originalNonAnnotatedServiceDeclaration;
+                if (angular.isArray(serviceDeclaration.declaration)) {
+                    originalNonAnnotatedServiceDeclaration =
+                        serviceDeclaration.declaration[serviceDeclaration.declaration.length - 1];
+                } else {
+                    originalNonAnnotatedServiceDeclaration = serviceDeclaration.declaration;
+                }
+
+                annotatedService.push(originalNonAnnotatedServiceDeclaration);
 
                 buildModule[serviceDeclaration.providerMethod](serviceName, annotatedService);
             });
