@@ -158,7 +158,6 @@ describe('moduleBuilder service', function() {
                     expect($injector.has('$http')).toBe(true);
                     expect($injector.has('nonMockableService')).toBe(true);
                     expect($injector.has('mockableService')).toBe(false);
-                    expect($injector.has('aResource')).toBe(false);
 
                     expect(mockableServiceMock.propertyFromMockableService)
                         .toBe(originalMockableService.propertyFromMockableService);
