@@ -3,5 +3,5 @@
 
 var injector = angular.injector(['ng', 'ngImprovedTesting']);
 
-window.ModuleBuilder = injector.get('ModuleBuilder');
+window.ModuleBuilder = injector.get('moduleBuilder');
 }(window));

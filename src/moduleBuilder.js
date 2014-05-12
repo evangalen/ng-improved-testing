@@ -2,11 +2,14 @@
 (function() {
 'use strict';
 
-angular.module('ngImprovedTesting').factory('ModuleBuilder', [
+angular.module('ngImprovedTesting').factory('moduleBuilder', [
         'moduleIntrospector', 'mockCreator',
         function(moduleIntrospector, mockCreator) {
 
     var numberOfBuildModules = 0;
+
+    var angularModuleNames = ['ng', 'ngAnimate', 'ngCookies', 'ngMessages', 'ngMock',
+            'ngAnimateMock', 'ngMockE2E', 'ngResource', 'ngRoute', 'ngSanitize', 'ngTouch'];
 
     /**
      * @ngdoc type
@@ -16,10 +19,6 @@ angular.module('ngImprovedTesting').factory('ModuleBuilder', [
         var servicesUsingMockedServices = [];
 
         var originalModule = angular.module(moduleName);
-        if (!originalModule) {
-            throw 'Could not find angular module: ' + moduleName;
-        }
-
         var injector = angular.injector(['ng', moduleName]);
 
         //noinspection SpellCheckingInspection
@@ -31,9 +30,6 @@ angular.module('ngImprovedTesting').factory('ModuleBuilder', [
          */
         this.withServiceUsingMocks = function(serviceName) {
             var serviceDeclaration = introspector.getServiceDeclaration(serviceName);
-            if (!serviceDeclaration) {
-                throw 'Could not find declaration of service with name: ' + serviceName;
-            }
 
             if (serviceDeclaration.providerMethod === 'constant' || serviceDeclaration.providerMethod === 'value') {
                 throw 'Services declares with "contact" or "value" are not supported';
@@ -63,8 +59,8 @@ angular.module('ngImprovedTesting').factory('ModuleBuilder', [
                 var annotatedService = [];
 
                 angular.forEach(serviceDependencies, function (serviceDependencyInfo, serviceDependencyName) {
-                    var toBeMocked = serviceDependencyInfo.module.name !== 'ng' &&
-                        mockCreator.canBeMocked(serviceDependencyInfo.instance);
+                    var toBeMocked = angularModuleNames.indexOf(serviceDependencyInfo.module.name) === -1 &&
+                            mockCreator.canBeMocked(serviceDependencyInfo.instance);
 
                     if (toBeMocked) {
                         toBeMockedServices.push(serviceDependencyName);

@@ -1,0 +1,160 @@
+/* global angular, inject, describe, beforeEach, it, spyOn, expect, module */
+describe('moduleBuilder service', function() {
+    'use strict';
+
+    var moduleIntrospectorInstance = null;
+
+    var ngImprovedTestingInjector;
+
+    beforeEach(function() {
+        var ngImprovedModulesInjector = angular.injector(['ngImprovedModules']);
+
+        var originalModuleIntrospector = ngImprovedModulesInjector.get('moduleIntrospector');
+
+        ngImprovedTestingInjector = angular.injector(['ngImprovedTesting', function($provide) {
+            var spiedModuleIntrospector = jasmine.createSpy().andCallFake(function() {
+                var result = originalModuleIntrospector.apply(this, arguments);
+
+                moduleIntrospectorInstance = result;
+
+                for (var propertyName in result) {
+                    if (result.hasOwnProperty(propertyName) && angular.isFunction(result[propertyName])) {
+                        spyOn(result, propertyName).andCallThrough();
+                    }
+                }
+
+                return result;
+            });
+
+            $provide.value('moduleIntrospector', spiedModuleIntrospector);
+        }]);
+    });
+
+    afterEach(function() {
+        moduleIntrospectorInstance = null;
+    });
+
+
+    var moduleBuilder;
+    var createdInjector = null;
+
+    /** @const */
+    var originalMockableService = Object.freeze({
+        propertyFromMockableService: 'aValue',
+        methodFromMockableService: angular.noop
+    });
+
+    /** @const */
+    var originalNonMockableService = Object.freeze({
+        propertyFromNonMockableService: 'aValue'
+    });
+
+    var originalModuleInstance = angular.module('aModule', [])
+        .value('mockableService', originalMockableService)
+        .value('nonMockableService', originalNonMockableService)
+        .factory('aService', function($http, nonMockableService, mockableService) {
+            return {};
+        });
+
+
+
+    beforeEach(function() {
+        moduleBuilder = ngImprovedTestingInjector.get('moduleBuilder');
+
+        var originalInjectorFn = angular.injector;
+        spyOn(angular, 'injector').andCallFake(function() {
+            var result = originalInjectorFn.apply(this, arguments);
+
+            createdInjector = result;
+
+            return result;
+        });
+    });
+
+    afterEach(function() {
+        createdInjector = null;
+    });
+
+
+
+    describe('forModule method', function() {
+
+        it('should throw some exception when an angular module doesn not exist', function() {
+            expect(function() {
+                moduleBuilder.forModule('nonExistingModule');
+            }).toThrow();
+        });
+
+        it('should create a builder object', function() {
+            var result = moduleBuilder.forModule('aModule');
+
+            expect(angular.isObject(result)).toBe(true);
+            expect(angular.isFunction(result.build)).toBe(true);
+        });
+
+        it('should create an angular injector for ["ng", "aModule"]', function() {
+            moduleBuilder.forModule('aModule');
+
+            expect(createdInjector).toBeDefined();
+            expect(angular.injector).toHaveBeenCalledWith(['ng', 'aModule']);
+        });
+
+        it('should create a module introspector', function() {
+            moduleBuilder.forModule('aModule');
+
+            expect(moduleIntrospectorInstance).toBeDefined();
+        });
+    });
+
+
+    describe('ngDirectiveTesting.ModuleBuilder', function() {
+
+        describe('withServiceUsingMocks method', function() {
+
+            it('should throw an exception when invoke for "constant" as well as "value" service', function() {
+                originalModuleInstance.constant('aConstant', 'aConstantValue');
+                originalModuleInstance.constant('aValue', 'aValueValue');
+
+                var moduleBuilderInstance = moduleBuilder.forModule('aModule');
+
+                expect(function() {
+                    moduleBuilderInstance.withServiceUsingMocks('aConstant');
+                }).toThrow('Services declares with "contact" or "value" are not supported');
+
+                expect(function() {
+                    moduleBuilderInstance.withServiceUsingMocks('aValue');
+                }).toThrow('Services declares with "contact" or "value" are not supported');
+            });
+
+            it('should return the module builder instance', function() {
+                var moduleBuilderInstance = moduleBuilder.forModule('aModule');
+
+                var result = moduleBuilderInstance.withServiceUsingMocks('aService');
+
+                expect(result).toBe(moduleBuilderInstance);
+            });
+        });
+
+
+        describe('build method', function() {
+
+            it('should create a service with mocked dependencies', function() {
+                var moduleBuilderInstance = moduleBuilder.forModule('aModule');
+
+                moduleBuilderInstance.withServiceUsingMocks('aService').build();
+
+                inject(function($injector, aService, mockableServiceMock) {
+                    expect(angular.isObject(aService)).toBe(true);
+                    expect($injector.has('$http')).toBe(true);
+                    expect($injector.has('nonMockableService')).toBe(true);
+                    expect($injector.has('mockableService')).toBe(false);
+
+                    expect(mockableServiceMock.propertyFromMockableService)
+                        .toBe(originalMockableService.propertyFromMockableService);
+                    expect(jasmine.isSpy(mockableServiceMock.methodFromMockableService)).toBe(true);
+                });
+            });
+        });
+    });
+
+});

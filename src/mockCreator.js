@@ -22,9 +22,9 @@ function MockCreator() {
      */
     this.createMock = function (value) {
         if (angular.isFunction(value)) {
-            return jasmine.createSpy();
-        } else if (angular.isObject(value)) {
-            return createMockObject(value);
+            return createFunctionMock(value);
+        } else if (isObjectWithMethods(value)) {
+            return createObjectMock(value);
         } else {
             throw 'Could not mock provided value: ' + value;
         }
@@ -36,12 +36,7 @@ function MockCreator() {
         }
 
         for (var propertyName in value) {
-            if (!value.hasOwnProperty(propertyName)) {
-                continue;
-            }
-
-            var property = value[propertyName];
-            if (angular.isFunction(property)) {
+            if (value.hasOwnProperty(propertyName) && angular.isFunction(value[propertyName])) {
                 return true;
             }
         }
@@ -49,23 +44,66 @@ function MockCreator() {
         return false;
     }
 
-    function createMockObject(obj) {
-        var result = {};
+    /**
+     * @param {Function} value
+     * @returns {Function}
+     */
+    function createFunctionMock(value) {
+        if (!hasProperties(value) && !hasProperties(value.prototype, 'constructor')) {
+            return jasmine.createSpy();
+        }
 
+        var Constructor = jasmine.createSpy();
+
+        copyPropertiesAndReplaceWithSpies(value, Constructor);
+
+        Constructor.prototype = Object.create(value.prototype);
+        copyPropertiesAndReplaceWithSpies(value.prototype, Constructor.prototype, 'constructor');
+        Constructor.prototype.constructor = value.prototype.constructor;
+
+        return Constructor;
+    }
+
+    /**
+     * @param {Object} obj
+     * @param {...string} ignoreProperties
+     */
+    function hasProperties(obj, ignoreProperties) {
         for (var propertyName in obj) {
-            if (!obj.hasOwnProperty(propertyName)) {
-                continue;
-            }
-
-            var property = obj[propertyName];
-            if (angular.isFunction(property)) {
-                result[propertyName] = jasmine.createSpy();
-            } else {
-                result[propertyName] = property;
+            if (obj.hasOwnProperty(propertyName) &&
+                    (!ignoreProperties || ignoreProperties.indexOf(propertyName) === -1)) {
+                return true;
             }
         }
 
+        return false;
+    }
+
+    function createObjectMock(obj) {
+        var result = {};
+
+        copyPropertiesAndReplaceWithSpies(obj, result);
+
         return result;
+    }
+
+    /**
+     * @param {Object} source
+     * @param {Object} target
+     * @param {...string} ignoreProperties
+     */
+    function copyPropertiesAndReplaceWithSpies(source, target, ignoreProperties) {
+        for (var propertyName in source) {
+            if (source.hasOwnProperty(propertyName) &&
+                    (!ignoreProperties || ignoreProperties.indexOf(propertyName) === -1)) {
+                var propertyValue = source[propertyName];
+                if (angular.isFunction(propertyValue)) {
+                    target[propertyName] = jasmine.createSpy();
+                } else {
+                    target[propertyName] = propertyValue;
+                }
+            }
+        }
     }
 }
 
