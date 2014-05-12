@@ -2,16 +2,40 @@
 describe('moduleBuilder service', function() {
     'use strict';
 
-    var moduleIntrospectorInstance = null;
-    var ngImprovedTestingInjector;
+    /** @const */
+    var originalMockableService = Object.freeze({
+        propertyFromMockableService: 'aValue',
+        methodFromMockableService: angular.noop
+    });
+
+    /** @const */
+    var originalNonMockableService = Object.freeze({
+        propertyFromNonMockableService: 'aValue'
+    });
+
+    /** @const */
+    var originalModuleInstance = angular.module('aModule', [])
+        .value('mockableService', originalMockableService)
+        .value('nonMockableService', originalNonMockableService)
+        .factory('aService', ['$http', 'nonMockableService', 'mockableService', function() {
+            return {};
+        }]);
+
+    /** @const */
     var emptyInjector = angular.injector([]);
+
+
+    var moduleBuilder;
+
+    var createdInjector = null;
+    var moduleIntrospectorInstance = null;
+
 
     beforeEach(function() {
         var ngImprovedModulesInjector = angular.injector(['ngImprovedModules']);
-
         var originalModuleIntrospector = ngImprovedModulesInjector.get('moduleIntrospector');
 
-        ngImprovedTestingInjector = angular.injector(['ngImprovedTesting', function($provide) {
+        var ngImprovedTestingInjector = angular.injector(['ngImprovedTesting', function($provide) {
             var spiedModuleIntrospector = jasmine.createSpy().andCallFake(function() {
                 var result = originalModuleIntrospector.apply(this, arguments);
 
@@ -28,38 +52,7 @@ describe('moduleBuilder service', function() {
 
             $provide.value('moduleIntrospector', spiedModuleIntrospector);
         }]);
-    });
 
-    afterEach(function() {
-        moduleIntrospectorInstance = null;
-    });
-
-
-
-    var moduleBuilder;
-    var createdInjector = null;
-
-    /** @const */
-    var originalMockableService = Object.freeze({
-        propertyFromMockableService: 'aValue',
-        methodFromMockableService: angular.noop
-    });
-
-    /** @const */
-    var originalNonMockableService = Object.freeze({
-        propertyFromNonMockableService: 'aValue'
-    });
-
-    var originalModuleInstance = angular.module('aModule', [])
-        .value('mockableService', originalMockableService)
-        .value('nonMockableService', originalNonMockableService)
-        .factory('aService', ['$http', 'nonMockableService', 'mockableService', function() {
-            return {};
-        }]);
-
-
-
-    beforeEach(function() {
         moduleBuilder = ngImprovedTestingInjector.get('moduleBuilder');
 
         var originalInjectorFn = angular.injector;
@@ -74,6 +67,7 @@ describe('moduleBuilder service', function() {
 
     afterEach(function() {
         createdInjector = null;
+        moduleIntrospectorInstance = null;
     });
 
 
