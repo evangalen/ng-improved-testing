@@ -3,7 +3,6 @@ describe('moduleBuilder service', function() {
     'use strict';
 
     var moduleIntrospectorInstance = null;
-
     var ngImprovedTestingInjector;
 
     beforeEach(function() {
@@ -33,6 +32,7 @@ describe('moduleBuilder service', function() {
     afterEach(function() {
         moduleIntrospectorInstance = null;
     });
+
 
 
     var moduleBuilder;
@@ -104,7 +104,9 @@ describe('moduleBuilder service', function() {
 
             expect(moduleIntrospectorInstance).toBeDefined();
         });
+
     });
+
 
 
     describe('ngDirectiveTesting.ModuleBuilder', function() {
@@ -133,6 +135,7 @@ describe('moduleBuilder service', function() {
 
                 expect(result).toBe(moduleBuilderInstance);
             });
+
         });
 
 
@@ -154,7 +157,9 @@ describe('moduleBuilder service', function() {
                     expect(jasmine.isSpy(mockableServiceMock.methodFromMockableService)).toBe(true);
                 });
             });
+
         });
+
     });
 
 });

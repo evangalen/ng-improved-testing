@@ -25,6 +25,7 @@ describe('mockCreator service', function() {
             });
         });
 
+
         describe('should return false for', function() {
 
             it('an object without any (enumerable) properties', function() {
@@ -47,6 +48,7 @@ describe('mockCreator service', function() {
                 expect(mockCreator.canBeMocked([])).toBe(false);
             });
         });
+
     });
 
 
@@ -149,9 +151,11 @@ describe('mockCreator service', function() {
                 expect(createdSpies[1]).toBe(SpyConstructor.aStaticMethod);
                 expect(SpyConstructor.aStaticMethodOfParent).toBeUndefined();
                 expect(createdSpies[2]).toBe(SpyConstructor.prototype.anInstanceMethod);
-                expect(SpyConstructor.prototype.anInheritedConstant).toBe(ParentConstructor.prototype.anInheritedConstant);
+                expect(SpyConstructor.prototype.anInheritedConstant)
+                    .toBe(ParentConstructor.prototype.anInheritedConstant);
                 expect(SpyConstructor.prototype.anInheritedMethod).toBe(ParentConstructor.prototype.anInheritedMethod);
             });
+
 
             function assertFirstCreatedSpyIsContructor(SpyConstructor) {
                 expect(createdSpies.length > 0).toBe(true);
@@ -159,6 +163,7 @@ describe('mockCreator service', function() {
                 expect(SpyConstructor.prototype.constructor).toBe(Constructor);
                 expect(new SpyConstructor() instanceof Constructor).toBe(true);
             }
+
         });
 
 
@@ -244,5 +249,6 @@ describe('mockCreator service', function() {
 
             return result;
         }
+
     });
 });
