@@ -39,6 +39,75 @@ angular.module('ngImprovedTesting').factory('moduleBuilder', [
         };
 
         /**
+         * @param {string} serviceName
+         * @param {...string} exceptFor
+         * @returns {ModuleBuilder}
+         */
+        this.withServiceUsingMocksExceptFor = function(serviceName, exceptFor) {
+            throw 'not implemented yet';
+        };
+
+        /**
+         * @param {string} filterName
+         * @returns {ModuleBuilder}
+         */
+        this.withFilterUsingMocks = function(filterName) {
+            throw 'not implemented yet';
+        };
+
+        /**
+         * @param {string} filterName
+         * @param {...string} exceptFor
+         * @returns {ModuleBuilder}
+         */
+        this.withFilterUsingMocksExceptFor = function(filterName, exceptFor) {
+            throw 'not implemented yet';
+        };
+
+
+        this.WithMockedFilter = function(filterName) {
+            throw 'not implemented yet';
+        };
+
+        /**
+         * @param {string} controllerName
+         * @returns {ModuleBuilder}
+         */
+        this.withControllerUsingMocks = function(controllerName) {
+            throw 'not implemented yet';
+        };
+
+        /**
+         * @param {string} controllerName
+         * @param {...string} exceptFor
+         * @returns {ModuleBuilder}
+         */
+        this.withControllerUsingMocksExceptFor = function(controllerName, exceptFor) {
+            throw 'not implemented yet';
+        };
+
+        this.withMockedController = function(controllerName) {
+            throw 'not implemented yet';
+        };
+
+        /**
+         * @param {string} directiveName
+         * @returns {ModuleBuilder}
+         */
+        this.withDirectiveUsingMocks = function(directiveName) {
+            throw 'not implemented yet';
+        };
+
+        /**
+         * @param {string} directiveName
+         * @param {...string} exceptFor
+         * @returns {ModuleBuilder}
+         */
+        this.withDirectiveUsingMocksExceptFor = function(directiveName, exceptFor) {
+            throw 'not implemented yet';
+        };
+
+        /**
          * @returns {function()}
          */
         this.build = function() {
