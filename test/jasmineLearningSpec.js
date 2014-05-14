@@ -7,13 +7,24 @@ describe('jasmine', function() {
 
         describe('created with jasmine.createSpy()', function() {
 
-            it('should allow instantiation using new', function() {
+            it('should support usage as a constructor', function() {
                 var Constructor = jasmine.createSpy();
+
+                Constructor.andCallFake(function(value) {
+                    expect(this instanceof Constructor).toBe(true);
+
+                    angular.extend(this, value || {});
+                });
+
                 Constructor.prototype.anInstanceMethod = function() {};
 
-                var instance = new Constructor();
+                var source = {aProperty: 'value'};
+
+                var instance = new Constructor(source);
 
                 expect(instance instanceof Constructor).toBe(true);
+                expect(Constructor).toHaveBeenCalledWith(source);
+                expect(instance.aProperty).toBe('value');
                 expect(instance.hasOwnProperty('anInstanceMethod')).toBe(false);
                 expect(instance.anInstanceMethod).toBe(Constructor.prototype.anInstanceMethod);
             });

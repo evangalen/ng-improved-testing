@@ -21,7 +21,6 @@ angular.module('ngImprovedTesting').factory('moduleBuilder', [
         var originalModule = angular.module(moduleName);
         var injector = angular.injector(['ng', moduleName]);
 
-        //noinspection SpellCheckingInspection
         var introspector = moduleIntrospector(moduleName);
 
         /**

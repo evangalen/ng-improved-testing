@@ -14,12 +14,19 @@ describe('moduleBuilder service', function() {
     });
 
     /** @const */
-    var originalModuleInstance = angular.module('aModule', [])
+    var originalModuleInstance = angular.module('aModule', ['ngResource'])
         .value('mockableService', originalMockableService)
         .value('nonMockableService', originalNonMockableService)
-        .factory('aService', ['$http', 'nonMockableService', 'mockableService', function() {
-            return {};
-        }]);
+        .factory('MyResource', function($resource) {
+            return $resource('/rest/resource');
+        })
+        .factory('aService', function($http, nonMockableService, mockableService, MyResource) {
+            return {
+                queryList: function() {
+                    return MyResource.query();
+                }
+            };
+        });
 
     /** @const */
     var emptyInjector = angular.injector([]);
@@ -153,11 +160,16 @@ describe('moduleBuilder service', function() {
                 expect(generatedModuleName).toBe('generatedByNgImprovedTesting#1');
                 expect(angular.module(generatedModuleName)).toBeDefined();
 
-                inject(function($injector, aService, mockableServiceMock) {
+                inject(function($injector, aService, mockableServiceMock, MyResourceMock) {
                     expect(angular.isObject(aService)).toBe(true);
                     expect($injector.has('$http')).toBe(true);
                     expect($injector.has('nonMockableService')).toBe(true);
                     expect($injector.has('mockableService')).toBe(false);
+                    expect($injector.has('MyResource')).toBe(false);
+
+                    MyResourceMock.query.andReturn([new MyResourceMock({aProperty: 'aValue'})]);
+
+                    expect(aService.queryList()).toEqual([new MyResourceMock({aProperty: 'aValue'})]);
 
                     expect(mockableServiceMock.propertyFromMockableService)
                         .toBe(originalMockableService.propertyFromMockableService);
