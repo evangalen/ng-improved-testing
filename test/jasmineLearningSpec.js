@@ -1,5 +1,3 @@
-/* global angular, inject, describe, beforeEach, it, spyOn, expect, module */
-
 describe('jasmine', function() {
     'use strict';
 

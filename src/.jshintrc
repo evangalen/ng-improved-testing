@@ -1,0 +1,34 @@
+{
+    "plusplus": true,
+    "nonew": true,
+    "curly": true,
+    "latedef": true,
+    "maxdepth": 4,
+    //TODO: remove once all "not implemented yet" are implemented
+//    "unused": true,
+    "noarg": true,
+    "trailing": true,
+    //TODO: remove once "module.prefix" + "module.suffix" is used
+//    "indent": 4,
+    "forin":true,
+    "noempty": true,
+    "quotmark": "single",
+    "maxparams": 4,
+    "eqeqeq": true,
+    "strict": true,
+    "undef": true,
+    "bitwise": true,
+    "newcap": true,
+    "immed": true,
+    "es3": true,
+    "maxcomplexity": 10,
+    "nonbsp": true,
+    "maxlen": 120,
+    "freeze": true,
+    "globalstrict" :true,
+    "globals": {
+        "angular": false,
+        "window": false,
+        "jasmine": false
+    }
+}

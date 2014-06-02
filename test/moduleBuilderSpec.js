@@ -1,4 +1,3 @@
-/* global angular, inject, describe, beforeEach, it, spyOn, expect, module */
 describe('moduleBuilder service', function() {
     'use strict';
 
@@ -17,7 +16,7 @@ describe('moduleBuilder service', function() {
     var originalModuleInstance = angular.module('moduleBuilderSpecModule', ['ngResource'])
         .value('mockableService', originalMockableService)
         .value('nonMockableService', originalNonMockableService)
-        .factory('MyResource', function($resource, $http) {
+        .factory('MyResource', function($resource) {
             return $resource('/a/rest/url', {}, {update: {method: 'UPDATE'}});
         })
         .factory('aService', function($http, nonMockableService, mockableService, MyResource) {

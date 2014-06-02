@@ -34,23 +34,9 @@ module.exports = function(grunt) {
             }
         },
         jshint: {
-            files: ['src/**/*.js', 'test/**/*.js'],
+            files: ['*.js', 'src/**/*.js', 'test/**/*.js'],
             options: {
-                "globalstrict": true,
-                // options here to override JSHint defaults
-                globals: {
-                    jQuery: true,
-                    console: true,
-                    module: true,
-                    document: true,
-                    angular: true,
-                    jasmine: true,
-                    window: true,
-                    describe: true,
-                    beforeEach: true,
-                    it: true,
-                    expect: true
-                }
+                jshintrc: true
             }
         },
         watch: {

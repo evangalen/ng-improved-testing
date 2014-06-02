@@ -1,4 +1,3 @@
-/* global ngImprovedTestingModule */
 (function() {
 'use strict';
 

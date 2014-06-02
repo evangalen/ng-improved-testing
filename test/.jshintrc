@@ -1,0 +1,44 @@
+{
+    //TODO: decide to either remove this rule or modify the code accordingly
+//    "plusplus": true,
+    "nonew": true,
+    "curly": true,
+    "latedef": true,
+    "maxdepth": 4,
+    "unused": true,
+    "noarg": true,
+    "trailing": true,
+    "indent": 4,
+    "forin":true,
+    "noempty": true,
+    "quotmark": "single",
+    "maxparams": 4,
+    "eqeqeq": true,
+    "strict": true,
+    "undef": true,
+    "bitwise": true,
+    "newcap": true,
+    "immed": true,
+    "es3": true,
+    "maxcomplexity": 10,
+    "nonbsp": true,
+    "maxlen": 120,
+    "freeze": true,
+    "globalstrict" :true,
+    "globals": {
+        "angular": false,
+        "module": false,
+        "inject": false,
+        "describe": false,
+        "beforeEach": false,
+        "afterEach": false,
+        "it": false,
+        "spyOn": false,
+        "jasmine": false,
+        "expect": false,
+        "window": false,
+
+        // TODO: remove once the last "xit" has been replaced with an "it"
+        "xit": false
+    }
+}

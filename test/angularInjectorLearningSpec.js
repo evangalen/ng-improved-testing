@@ -73,7 +73,7 @@ describe('$injector service', function() {
 
 
 
-    describe("get method", function() {
+    describe('get method', function() {
 
         it('should return a filter using its filter name + "Filter" suffix', function() {
             expect($filterProvider.register).toHaveBeenCalledWith('aFilter', filterFactory);
@@ -119,7 +119,7 @@ describe('$injector service', function() {
     });
 
 
-    describe("has method", function() {
+    describe('has method', function() {
 
         it('should find a filter using its filter name + "Filter" suffix', function() {
             expect($injector.has('aFilterFilter')).toBe(true);
