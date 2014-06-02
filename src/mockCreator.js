@@ -93,6 +93,8 @@ function MockCreator() {
      * @param {...string} ignoreProperties
      */
     function copyPropertiesAndReplaceWithSpies(source, target, ignoreProperties) {
+        ignoreProperties = Array.prototype.slice.call(arguments, 2);
+
         for (var propertyName in source) {
             if (source.hasOwnProperty(propertyName) &&
                     (!ignoreProperties || ignoreProperties.indexOf(propertyName) === -1)) {

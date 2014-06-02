@@ -40,10 +40,10 @@ angular.module('ngImprovedTesting').factory('moduleBuilder', [
 
         /**
          * @param {string} serviceName
-         * @param {...string} exceptFor
+         * @param {...string} except
          * @returns {ModuleBuilder}
          */
-        this.withServiceUsingMocksExceptFor = function(serviceName, exceptFor) {
+        this.withServiceUsingMocksExcept = function(serviceName, except) {
             throw 'not implemented yet';
         };
 
@@ -57,17 +57,23 @@ angular.module('ngImprovedTesting').factory('moduleBuilder', [
 
         /**
          * @param {string} filterName
-         * @param {...string} exceptFor
+         * @param {...string} except
          * @returns {ModuleBuilder}
          */
-        this.withFilterUsingMocksExceptFor = function(filterName, exceptFor) {
+        this.withFilterUsingMocksExcept = function(filterName, except) {
             throw 'not implemented yet';
         };
 
+        //this.withFilter
 
         this.WithMockedFilter = function(filterName) {
+            //TODO: make sure that a filter is registerd with $provide with the "Mock" suffix (i.e. "...FilterMock").
+            //  However when using the "$filter" function it should this be accessible with its original name,
+            //  even from the tests but also from a "real" service
             throw 'not implemented yet';
         };
+
+        //TODO: also add: this.withController
 
         /**
          * @param {string} controllerName
@@ -79,16 +85,25 @@ angular.module('ngImprovedTesting').factory('moduleBuilder', [
 
         /**
          * @param {string} controllerName
-         * @param {...string} exceptFor
+         * @param {...string} except
          * @returns {ModuleBuilder}
          */
-        this.withControllerUsingMocksExceptFor = function(controllerName, exceptFor) {
+        this.withControllerUsingMocksExcept = function(controllerName, except) {
             throw 'not implemented yet';
         };
 
         this.withMockedController = function(controllerName) {
+            //TODO: make this the to instantiate "inside" the tests you need to suffix "Mock" but not inside a "real"
+            //  service; inside a test you need "$controller('...CtrlMock', {$scope: ...})" but in a "real" service the
+            //  following should still work: "$controller('....Ctrl', ....);"
+            //TODO: determine how a test obtains the mock for the Controller constructor function;
+            //  a controllers isn't registered on $provide at all!
+            //  alternative... still "mocked" controller support and allow a callback with $provide on the
+            //  "moduleBuilder" (just like the "angular.mock.module" function)
             throw 'not implemented yet';
         };
+
+        //TODO: also add: this.withDirective
 
         /**
          * @param {string} directiveName
@@ -100,12 +115,15 @@ angular.module('ngImprovedTesting').factory('moduleBuilder', [
 
         /**
          * @param {string} directiveName
-         * @param {...string} exceptFor
+         * @param {...string} except
          * @returns {ModuleBuilder}
          */
-        this.withDirectiveUsingMocksExceptFor = function(directiveName, exceptFor) {
+        this.withDirectiveUsingMocksExcept = function(directiveName, except) {
             throw 'not implemented yet';
         };
+
+        //NOT IMPLEMENTED: withMockedDirective
+        // not commonly needed... can always be made using the "function($provide)" callback
 
         /**
          * @returns {function()}

@@ -14,13 +14,14 @@ describe('moduleBuilder service', function() {
     });
 
     /** @const */
-    var originalModuleInstance = angular.module('aModule', ['ngResource'])
+    var originalModuleInstance = angular.module('moduleBuilderSpecModule', ['ngResource'])
         .value('mockableService', originalMockableService)
         .value('nonMockableService', originalNonMockableService)
-        .factory('MyResource', function($resource) {
-            return $resource('/rest/resource');
+        .factory('MyResource', function($resource, $http) {
+            return $resource('/a/rest/url', {}, {update: {method: 'UPDATE'}});
         })
         .factory('aService', function($http, nonMockableService, mockableService, MyResource) {
+
             return {
                 queryList: function() {
                     return MyResource.query();
@@ -88,21 +89,21 @@ describe('moduleBuilder service', function() {
         });
 
         it('should create a builder object', function() {
-            var result = moduleBuilder.forModule('aModule');
+            var result = moduleBuilder.forModule(originalModuleInstance.name);
 
             expect(angular.isObject(result)).toBe(true);
             expect(angular.isFunction(result.build)).toBe(true);
         });
 
-        it('should create an angular injector for ["ng", "aModule"]', function() {
-            moduleBuilder.forModule('aModule');
+        it('should create an angular injector for ["ng", <module-name>]', function() {
+            moduleBuilder.forModule(originalModuleInstance.name);
 
             expect(createdInjector).toBeDefined();
-            expect(angular.injector).toHaveBeenCalledWith(['ng', 'aModule']);
+            expect(angular.injector).toHaveBeenCalledWith(['ng', originalModuleInstance.name]);
         });
 
         it('should create a module introspector', function() {
-            moduleBuilder.forModule('aModule');
+            moduleBuilder.forModule(originalModuleInstance.name);
 
             expect(moduleIntrospectorInstance).toBeDefined();
         });
@@ -119,7 +120,7 @@ describe('moduleBuilder service', function() {
                 originalModuleInstance.constant('aConstant', 'aConstantValue');
                 originalModuleInstance.constant('aValue', 'aValueValue');
 
-                var moduleBuilderInstance = moduleBuilder.forModule('aModule');
+                var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
 
                 expect(function() {
                     moduleBuilderInstance.withServiceUsingMocks('aConstant');
@@ -131,7 +132,7 @@ describe('moduleBuilder service', function() {
             });
 
             it('should return the module builder instance', function() {
-                var moduleBuilderInstance = moduleBuilder.forModule('aModule');
+                var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
 
                 var result = moduleBuilderInstance.withServiceUsingMocks('aService');
 
@@ -144,7 +145,7 @@ describe('moduleBuilder service', function() {
         describe('build method', function() {
 
             it('should create a service with mocked dependencies', function() {
-                var moduleBuilderInstance = moduleBuilder.forModule('aModule');
+                var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
 
                 spyOn(angular.mock, 'module').andCallThrough();
 
