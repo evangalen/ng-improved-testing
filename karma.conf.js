@@ -18,7 +18,7 @@ module.exports = function(config) {
       'bower_components/angular/angular.js',
       'bower_components/angular-mocks/angular-mocks.js',
       'bower_components/angular-resource/angular-resource.js',
-      'bower_components/ng-improved-modules/ng-improved-modules.js',
+      'bower_components/ng-module-introspector/ng-module-introspector.js',
       'src/module.js',
       'src/mockCreator.js',
       'src/moduleBuilder.js',

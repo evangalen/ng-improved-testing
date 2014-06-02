@@ -1,5 +1,5 @@
 (function() {
 'use strict';
 
-angular.module('ngImprovedTesting', ['ngImprovedModules']);
+angular.module('ngImprovedTesting', ['ngModuleIntrospector']);
 }());

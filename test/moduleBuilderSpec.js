@@ -40,8 +40,8 @@ describe('moduleBuilder service', function() {
 
 
     beforeEach(function() {
-        var ngImprovedModulesInjector = angular.injector(['ngImprovedModules']);
-        var originalModuleIntrospector = ngImprovedModulesInjector.get('moduleIntrospector');
+        var ngModuleIntrospectorInjector = angular.injector(['ngModuleIntrospector']);
+        var originalModuleIntrospector = ngModuleIntrospectorInjector.get('moduleIntrospector');
 
         var ngImprovedTestingInjector = angular.injector(['ngImprovedTesting', function($provide) {
             var spiedModuleIntrospector = jasmine.createSpy().andCallFake(function() {
