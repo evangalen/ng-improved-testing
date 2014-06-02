@@ -4,8 +4,7 @@
     "curly": true,
     "latedef": true,
     "maxdepth": 4,
-    //TODO: remove once all "not implemented yet" are implemented
-//    "unused": true,
+    "unused": true,
     "noarg": true,
     "trailing": true,
     //TODO: remove once "module.prefix" + "module.suffix" is used

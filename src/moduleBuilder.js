@@ -92,11 +92,15 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
          * @param {...string} except
          * @returns {ModuleBuilder}
          */
-        this.withControllerUsingMocksExcept = function(controllerName, except) {
+        this.withControllerUsingMocksExcept = function() {
             throw 'not implemented yet';
         };
 
-        this.withMockedController = function(controllerName) {
+        /**
+         * @param {string} controllerName
+         * @returns {ModuleBuilder}
+         */
+        this.withMockedController = function() {
             //TODO: make this the to instantiate "inside" the tests you need to suffix "Mock" but not inside a
             //  "real" service; inside a test you need "$controller('...CtrlMock', {$scope: ...})" but in a "real"
             //  service the following should still work: "$controller('....Ctrl', ....);"
@@ -113,7 +117,7 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
          * @param {string} directiveName
          * @returns {ModuleBuilder}
          */
-        this.withDirectiveUsingMocks = function(directiveName) {
+        this.withDirectiveUsingMocks = function() {
             throw 'not implemented yet';
         };
 
@@ -122,7 +126,7 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
          * @param {...string} except
          * @returns {ModuleBuilder}
          */
-        this.withDirectiveUsingMocksExcept = function(directiveName, except) {
+        this.withDirectiveUsingMocksExcept = function() {
             throw 'not implemented yet';
         };
 
