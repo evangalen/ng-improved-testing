@@ -1,140 +1,172 @@
 ;(function() {
 'use strict';
 
-
 // @ngInject
 function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
 
     var numberOfBuildModules = 0;
 
-    var angularModuleNames = ['ng', 'ngAnimate', 'ngCookies', 'ngMessages', 'ngMock',
-        'ngAnimateMock', 'ngMockE2E', 'ngResource', 'ngRoute', 'ngSanitize', 'ngTouch'];
-
     /**
-     * @ngdoc type
-     * @name ModuleBuilder
      * @constructor
      */
     function ModuleBuilder(moduleName) {
+
+        function registerComponent(type, componentName, componentKind, dependenciesUsage, dependencies) {
+            var toBeIncludedModuleComponent = {
+                type: type,
+                componentName: componentName,
+                componentKind: componentKind
+            };
+
+            if (dependenciesUsage) {
+                toBeIncludedModuleComponent.dependenciesUsage = dependenciesUsage;
+                toBeIncludedModuleComponent.dependencies = dependencies;
+            }
+
+            toBeIncludedModuleComponents.push(toBeIncludedModuleComponent);
+        }
+
         var servicesUsingMockedServices = [];
 
+        /** @type {angular.Module} */
         var originalModule = angular.module(moduleName);
+
+        /** @type {$injector} */
         var injector = angular.injector(['ng', moduleName]);
 
         var introspector = moduleIntrospector(moduleName);
 
         /**
-         * @param serviceName
-         * @returns {ModuleBuilder}
+         * @name ModuleBuilder.ToBeIncludedModuleComponent
+         * @typedef {Object}
+         * @property {string} type
+         * @property {string} componentName
+         * @property {string} componentKind
+         * @property {string} [dependenciesUsage]
+         * @property {Array.<string>} [dependencies]
          */
-        this.withServiceUsingMocks = function(serviceName) {
-            var serviceDeclaration = introspector.getServiceDeclaration(serviceName);
 
-            if (serviceDeclaration.providerMethod === 'constant' || serviceDeclaration.providerMethod === 'value') {
-                throw 'Services declares with "contact" or "value" are not supported';
-            }
+        /** @type {Object.<ModuleBuilder.ToBeIncludedModuleComponent>} */
+        var toBeIncludedModuleComponents = [];
 
-            servicesUsingMockedServices.push(serviceName);
+        /**
+         * Includes a service that replaces the dependencies specified in <em>toBeMockedDependencies</em> with mock
+         * implementations.
+         *
+         * NOTE: services from AngularJS itself will never be mocked.
+         *
+         * @param {string} serviceName the name of the service to be registered
+         * @param {...string} toBeMockedDependencies dependencies to be replaced with a mock implementation
+         * @returns {moduleIntrospectorFactory.ModuleBuilder} the module builder instance
+         */
+        this.serviceWithMocksFor = function(serviceName, toBeMockedDependencies) {
+            registerComponent('service', serviceName, 'withMocks', 'for', toBeMockedDependencies);
             return this;
         };
 
         /**
-         * @param {string} serviceName
-         * @param {...string} except
-         * @returns {ModuleBuilder}
+         * Includes a filter that replaces the dependencies specified in <em>toBeMockedDependencies</em> with mock
+         * implementations.
+         *
+         * NOTE: services from AngularJS itself will never be mocked
+         *
+         * @param {string} filterName name of the filter to be included in the to be build module
+         * @param {...string} toBeMockedDependencies dependencies to be replaced with a mock implementation
+         * @returns {moduleIntrospectorFactory.ModuleBuilder} the module builder instance
          */
-        this.withServiceUsingMocksExcept = function() {
-            throw 'not implemented yet';
+        this.filterWithMocksFor = function(filterName, toBeMockedDependencies) {
+            registerComponent('filter', filterName, 'withMocks', 'for', toBeMockedDependencies)
+            return this;
         };
 
         /**
-         * @param {string} filterName
-         * @returns {ModuleBuilder}
+         * Including an actual filter (and not a mocked one) in the module
+         *
+         * @param {string} filterName name of the filter to be included in the to be build module
+         * @returns {moduleIntrospectorFactory.ModuleBuilder}
          */
-        this.withFilterUsingMocks = function() {
-            throw 'not implemented yet';
+        this.filterAsIs = function(filterName) {
+            registerComponent('filter', filterName, 'actual');
+            return this;
+        };
+
+//        /**
+//         * Including a mocked filter (instead of the actual one) in the module
+//         *
+//         * @param {string} filterName name of the filter to be included in the to be build module
+//         * @returns {moduleIntrospectorFactory.ModuleBuilder}
+//         */
+//        this.WithMockedFilter = function(filterName) {
+//            registrations.push({type: RegistrationType.MOCKED_FILTER, name: filterName});
+//            return this;
+//        };
+
+        /**
+         * Includes a controller that uses mocked service dependencies (instead of actual services) in the module.
+         *
+         * @param {string} controllerName name of the controller to be included in the to be build module
+         * @param {...string} toBeMockedDependencies dependencies to be replaced with a mock implementation
+         * @returns {moduleIntrospectorFactory.ModuleBuilder}
+         */
+        this.controllerWithMocksFor = function(controllerName, toBeMockedDependencies) {
+            registerComponent('controller', controllerName, 'withMocks', 'for', toBeMockedDependencies);
+            return this;
         };
 
         /**
-         * @param {string} filterName
-         * @param {...string} except
-         * @returns {ModuleBuilder}
+         * Including an actual controller (and not a mocked one) in the module
+         *
+         * @param {string} controllerName name of the controller to be included in the to be build module
+         * @returns {moduleIntrospectorFactory.ModuleBuilder}
          */
-        this.withFilterUsingMocksExcept = function() {
-            throw 'not implemented yet';
+        this.controllerAsIs = function(controllerName) {
+            registerComponent('controller', controllerName, 'actual');
+            return this;
         };
 
-        //this.withFilter
+//        /**
+//         * Including a mocked controller (instead of the actual one) in the module
+//         *
+//         * @param {string} controllerName name of the controller to be included in the to be build module
+//         * @returns {moduleIntrospectorFactory.ModuleBuilder}
+//         */
+//        this.withMockedController = function(controllerName) {
+//            //TODO: make this the to instantiate "inside" the tests you need to suffix "Mock" but not inside a
+//            //  "real" service; inside a test you need "$controller('...CtrlMock', {$scope: ...})" but in a "real"
+//            //  service the following should still work: "$controller('....Ctrl', ....);"
+//            //TODO: determine how a test obtains the mock for the Controller constructor function;
+//            //  a controllers isn't registered on $provide at all!
+//            //  alternative... still "mocked" controller support and allow a callback with $provide on the
+//            //  "moduleBuilder" (just like the "angular.mock.module" function)
+//
+//            registrations.push({type: RegistrationType.MOCKED_CONTROLLER, name: controllerName});
+//            return this;
+//        };
+
+//        //TODO: also add: this.withDirective
+//        /**
+//         * @param {string} directiveName
+//         * @returns {ModuleBuilder}
+//         */
+//        this.withDirectiveUsingMockedServices = function() {
+//            throw 'not implemented yet';
+//        };
+//
+//        /**
+//         * @param {string} directiveName
+//         * @param {...string} except
+//         * @returns {ModuleBuilder}
+//         */
+//        this.withDirectiveUsingMockedServicesExcept = function() {
+//            throw 'not implemented yet';
+//        };
+//
+//        //NOT IMPLEMENTED: withMockedDirective
+//        // not commonly needed... can always be made using the "function($provide)" callback
 
         /**
-         * @param {string} filterName
-         * @returns {ModuleBuilder}
-         */
-        this.WithMockedFilter = function() {
-            //TODO: make sure that a filter is registerd with $provide with the "Mock" suffix
-            //  (i.e. "...FilterMock"). However when using the "$filter" function it should this be accessible with
-            //  its original name, even from the tests but also from a "real" service
-            throw 'not implemented yet';
-        };
-
-        //TODO: also add: this.withController
-
-        /**
-         * @param {string} controllerName
-         * @returns {ModuleBuilder}
-         */
-        this.withControllerUsingMocks = function() {
-            throw 'not implemented yet';
-        };
-
-        /**
-         * @param {string} controllerName
-         * @param {...string} except
-         * @returns {ModuleBuilder}
-         */
-        this.withControllerUsingMocksExcept = function() {
-            throw 'not implemented yet';
-        };
-
-        /**
-         * @param {string} controllerName
-         * @returns {ModuleBuilder}
-         */
-        this.withMockedController = function() {
-            //TODO: make this the to instantiate "inside" the tests you need to suffix "Mock" but not inside a
-            //  "real" service; inside a test you need "$controller('...CtrlMock', {$scope: ...})" but in a "real"
-            //  service the following should still work: "$controller('....Ctrl', ....);"
-            //TODO: determine how a test obtains the mock for the Controller constructor function;
-            //  a controllers isn't registered on $provide at all!
-            //  alternative... still "mocked" controller support and allow a callback with $provide on the
-            //  "moduleBuilder" (just like the "angular.mock.module" function)
-            throw 'not implemented yet';
-        };
-
-        //TODO: also add: this.withDirective
-
-        /**
-         * @param {string} directiveName
-         * @returns {ModuleBuilder}
-         */
-        this.withDirectiveUsingMocks = function() {
-            throw 'not implemented yet';
-        };
-
-        /**
-         * @param {string} directiveName
-         * @param {...string} except
-         * @returns {ModuleBuilder}
-         */
-        this.withDirectiveUsingMocksExcept = function() {
-            throw 'not implemented yet';
-        };
-
-        //NOT IMPLEMENTED: withMockedDirective
-        // not commonly needed... can always be made using the "function($provide)" callback
-
-        /**
-         * @returns {function()}
+         * Builds ...
+         * @returns {Function}
          */
         this.build = function() {
             numberOfBuildModules += 1;
@@ -146,6 +178,15 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
             var nonMockServiceDependencies = [];
 
             var buildModule = angular.module(buildModuleName, originalModule.requires);
+
+
+
+            moduleServices = {
+                'a': 'actual',
+                'b': 'mock',
+                'c': 'actualAndMock'
+            };
+
 
             angular.forEach(servicesUsingMockedServices, function (serviceName) {
                 var serviceDependencies = introspector.getServiceDependencies(injector, serviceName);
@@ -204,7 +245,7 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
         /**
          * @name moduleBuilder#forModule
          * @param {string} moduleName
-         * @returns {ModuleBuilder}
+         * @returns {moduleIntrospectorFactory.ModuleBuilder}
          */
         forModule: function(moduleName) {
             return new ModuleBuilder(moduleName);
