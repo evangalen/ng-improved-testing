@@ -122,17 +122,41 @@ describe('$injector service', function() {
     describe('has method', function() {
 
         it('should find a filter using its filter name + "Filter" suffix', function() {
-            expect($injector.has('aFilterFilter')).toBe(true);
+            expect(hasService($injector, 'aFilterFilter')).toBe(true);
         });
 
         it('should find a directive using its directive name + "Directive" suffix', function() {
-            expect($injector.has('aDirectiveDirective')).toBe(true);
+            expect(hasService($injector, 'aDirectiveDirective')).toBe(true);
         });
 
         it('should find an animation using its animation name + "-animation" suffix', function() {
 
         });
     });
+
+    /**
+     * @param {$injector} injector
+     * @param {string} serviceName
+     * @returns {boolean}
+     */
+    function hasService(injector, serviceName) {
+        if (injector.has) { // for AngularJS 1.2 and higher
+            return injector.has(serviceName);
+        } else { // fallback to ugly try-catch for AngularJS 1.0
+            try {
+                injector.get(serviceName);
+
+                return true;
+            } catch (e) {
+                if (e instanceof Error && e.message.indexOf('Unknown provider: ') === 0) {
+                    return false;
+                } else {
+                    throw e;
+                }
+            }
+        }
+    }
+
 
 });
 

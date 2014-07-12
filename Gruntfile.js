@@ -10,7 +10,8 @@ module.exports = function(grunt) {
             },
             default: {
                 files: {
-                    'dist/<%= pkg.name %>.js': ['src/module.js', 'src/*.js']
+                    'dist/<%= pkg.name %>.js':
+                        ['src/module.js', 'src/mockCreator.js', 'src/moduleBuilder.js', 'src/exports.js']
                 }
             }
         },

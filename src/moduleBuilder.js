@@ -26,6 +26,15 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
             toBeIncludedModuleComponents.push(toBeIncludedModuleComponent);
         }
 
+        function ensureNotAConstantOrValueService(serviceName) {
+            var providerMethod = introspector.getServiceDeclaration(serviceName).providerMethod;
+
+            if (providerMethod === 'constant' || providerMethod === 'value') {
+                throw 'Services declared with "contact" or "value" are not supported';
+            }
+        }
+
+
         /** @type {angular.Module} */
         var originalModule = angular.module(moduleName);
 
@@ -49,6 +58,7 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
 
         //TODO: comment
         this.serviceWithMocks = function(serviceName) {
+            ensureNotAConstantOrValueService(serviceName);
             includeComponent('service', serviceName, 'withMocks');
             return this;
         };
@@ -64,7 +74,23 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
          * @returns {moduleIntrospectorFactory.ModuleBuilder} the module builder instance
          */
         this.serviceWithMocksFor = function(serviceName, toBeMockedDependencies) {
+            ensureNotAConstantOrValueService(serviceName);
+            toBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
             includeComponent('service', serviceName, 'withMocks', 'for', toBeMockedDependencies);
+            return this;
+        };
+
+        //TODO: comment
+        this.serviceWithMocksExcept = function(serviceName, notToBeMockedDependencies) {
+            ensureNotAConstantOrValueService(serviceName);
+            notToBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
+            includeComponent('service', serviceName, 'withMocks', 'except', notToBeMockedDependencies);
+            return this;
+        };
+
+        //TODO: comment
+        this.filterWithMocks = function(filterName) {
+            includeComponent('filter', filterName, 'withMocks');
             return this;
         };
 
@@ -83,6 +109,12 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
             return this;
         };
 
+        //TODO: comment
+        this.filterWithMocksExcept = function(filterName, notToBeMockedDependencies) {
+            includeComponent('filter', filterName, 'withMocks', 'except', notToBeMockedDependencies);
+            return this;
+        };
+
         /**
          * Including an actual filter (and not a mocked one) in the module
          *
@@ -94,6 +126,12 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
             return this;
         };
 
+        //TODO: comment
+        this.controllerWithMocks = function(controllerName) {
+            includeComponent('controller', controllerName, 'withMocks');
+            return this;
+        };
+
         /**
          * Includes a controller that uses mocked service dependencies (instead of actual services) in the module.
          *
@@ -102,7 +140,14 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
          * @returns {moduleIntrospectorFactory.ModuleBuilder}
          */
         this.controllerWithMocksFor = function(controllerName, toBeMockedDependencies) {
+            toBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
             includeComponent('controller', controllerName, 'withMocks', 'for', toBeMockedDependencies);
+            return this;
+        };
+
+        //TODO: comment
+        this.controllerWithMocksExcept = function(controllerName, toBeMockedDependencies) {
+            includeComponent('controller', controllerName, 'withMocks', 'except', toBeMockedDependencies);
             return this;
         };
 
@@ -169,7 +214,8 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
                     var declaredModuleComponent = getDeclaredModuleComponent(type, name);
 
                     declarations[name] = {
-                        provideMethod: declaredModuleComponent.providerMethod,
+                        providerName: declaredModuleComponent.providerName,
+                        providerMethod: declaredModuleComponent.providerMethod,
                         declaration: declaredModuleComponent.declaration
                     };
                 } else if (type === 'service') {
@@ -194,15 +240,12 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
                     var shouldBeMocked = dependencyShouldBeMocked(toBeIncludedModuleComponent, dependencyName);
                     var canBeMocked = mockCreator.canBeMocked(dependencyInfo.instance);
 
-                    console.log(dependencyName + ' shouldBeMocked=' + shouldBeMocked);
-                    console.log(dependencyName + ' canBeMocked=' + canBeMocked);
-
                     if (shouldBeMocked && !canBeMocked &&
                             toBeIncludedModuleComponent.dependenciesUsage === 'for') {
                         throw 'Could not mock the dependency explicitly asked to mock: ' + dependencyName;
                     }
 
-                    var toBeMocked = dependencyShouldBeMocked && canBeMocked;
+                    var toBeMocked = shouldBeMocked && canBeMocked;
 
                     if (toBeMocked) {
                         mockedServices[dependencyName] = dependencyInfo.instance;
@@ -223,6 +266,7 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
                 annotatedDeclaration.push(originalNonAnnotatedServiceDeclaration);
 
                 declarations[name] = {
+                    providerName: declaredModuleComponent.providerName,
                     providerMethod: declaredModuleComponent.providerMethod,
                     declaration: annotatedDeclaration
                 };
@@ -253,7 +297,7 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
             var asIsServices = {};
 
             /**
-             * @type {Object.<{$providerMethod: string, declaration: (Function|Array.<(string|Function)>)}>}
+             * @type {Object.<{$provideMethod: string, declaration: (Function|Array.<(string|Function)>)}>}
              */
             var declarations = {};
 
@@ -267,7 +311,13 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
                 }
             });
 
-            return angular.mock.module(function($provide) {
+            return angular.mock.module(function($provide, $filterProvider, $controllerProvider) {
+                var providers = {
+                    $provide: $provide,
+                    $filterProvider: $filterProvider,
+                    $controllerProvider: $controllerProvider
+                };
+
                 angular.forEach(mockedServices, function(originalService, serviceName) {
                     var mockedService = mockCreator.createMock(originalService);
                     $provide.value(serviceName + 'Mock', mockedService);
@@ -278,8 +328,8 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
                 });
 
                 angular.forEach(declarations, function(declarationInfo, declarationName) {
-                    console.log(declarationInfo.declaration);
-                    $provide[declarationInfo.providerMethod](declarationName, declarationInfo.declaration);
+                    providers[declarationInfo.providerName][declarationInfo.providerMethod](
+                            declarationName, declarationInfo.declaration);
                 });
             }, buildModule.name);
         };

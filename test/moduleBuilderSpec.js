@@ -2,34 +2,58 @@ describe('moduleBuilder service', function() {
     'use strict';
 
     /** @const */
-    var originalMockableService = Object.freeze({
-        propertyFromMockableService: 'aValue',
-        methodFromMockableService: angular.noop
-    });
+    var nonMockableService = Object.freeze({aProperty: 'aValue'});
 
     /** @const */
-    var originalNonMockableService = Object.freeze({
-        propertyFromNonMockableService: 'aValue'
+    var mockableServiceA = Object.freeze({aMethod: angular.noop});
+
+    /** @const */
+    var mockableServiceB = Object.freeze({aMethod: angular.noop});
+
+
+    /**
+     * @constructor
+     * @const
+     */
+    var AServiceConstructor = jasmine.createSpy();
+
+    /** @const */
+    var aServiceFactoryFactory = jasmine.createSpy().andCallFake(function() {
+        return {};
+    });
+
+    /**
+     * @constructor
+     * @const
+     */
+    var aControllerConstructor = jasmine.createSpy();
+
+    /** @const */
+    var $getProviderFactory = jasmine.createSpy().andCallFake(function() {
+        return {};
+    });
+
+    var aFilterFactory = jasmine.createSpy().andCallFake(function() {
+        return function(input) {
+            return input;
+        };
     });
 
     /** @const */
     var originalModuleInstance = angular.module('moduleBuilderSpecModule', ['ngResource'])
-        .value('mockableService', originalMockableService)
-        .value('nonMockableService', originalNonMockableService)
-        .factory('MyResource', function($resource) {
-            return $resource('/a/rest/url', {}, {update: {method: 'UPDATE'}});
+        .value('nonMockableService', nonMockableService)
+        .value('mockableServiceA', mockableServiceA)
+        .value('mockableServiceB', mockableServiceB)
+        .factory('aServiceFactory',
+                ['nonMockableService', 'mockableServiceA', 'mockableServiceB', aServiceFactoryFactory])
+        .service('aServiceService',
+                ['nonMockableService', 'mockableServiceA', 'mockableServiceB', AServiceConstructor])
+        .provider('aServiceProvider', {
+            $get: ['nonMockableService', 'mockableServiceA', 'mockableServiceB', $getProviderFactory]
         })
-        .factory('aService', function($http, nonMockableService, mockableService, MyResource) {
-
-            return {
-                queryList: function() {
-                    return MyResource.query();
-                }
-            };
-        });
-
-    /** @const */
-    var emptyInjector = angular.injector([]);
+        .filter('aFilter', ['nonMockableService', 'mockableServiceA', 'mockableServiceB', aFilterFactory])
+        .controller('aController',
+                ['nonMockableService', 'notToBeMockedService', 'toBeMockedService', aControllerConstructor]);
 
 
     var moduleBuilder;
@@ -81,7 +105,7 @@ describe('moduleBuilder service', function() {
 
     describe('forModule method', function() {
 
-        it('should throw some exception when an angular module doesn not exist', function() {
+        it('should throw some exception when an angular module does not exist', function() {
             expect(function() {
                 moduleBuilder.forModule('nonExistingModule');
             }).toThrow();
@@ -111,74 +135,253 @@ describe('moduleBuilder service', function() {
 
 
 
-    describe('ngDirectiveTesting.ModuleBuilder', function() {
+    describe('ngImprovedTesting.ModuleBuilder', function() {
 
-        describe('withServiceUsingMocks method', function() {
+        function testMockingOfDependenciesOfConstantAndValueServicesIsNotAllowed(methodName) {
+            originalModuleInstance.constant('aConstant', 'aConstantValue');
+            originalModuleInstance.constant('aValue', 'aValueValue');
+
+            var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
+
+            expect(function() {
+                moduleBuilderInstance[methodName]('aConstant');
+            }).toThrow('Services declared with "contact" or "value" are not supported');
+
+            expect(function() {
+                moduleBuilderInstance[methodName]('aValue');
+            }).toThrow('Services declared with "contact" or "value" are not supported');
+        }
+
+        function assertMockableDepenciesWereMocked(
+                declaration, expectMockableServiceAMocked, expectMockableServiceBMocked) {
+            expect(declaration).toHaveBeenCalled();
+            expect(declaration.mostRecentCall.args.length).toBe(3);
+            expect(declaration.mostRecentCall.args[0]).toBe(nonMockableService);
+
+            if (expectMockableServiceAMocked) {
+                expect(declaration.mostRecentCall.args[1]).not.toBe(mockableServiceA);
+                expect(jasmine.isSpy(declaration.mostRecentCall.args[1].aMethod)).toBe(true);
+            } else {
+                expect(declaration.mostRecentCall.args[1]).toBe(mockableServiceA);
+            }
+
+            if (expectMockableServiceBMocked) {
+                expect(declaration.mostRecentCall.args[2]).not.toBe(mockableServiceB);
+                expect(jasmine.isSpy(declaration.mostRecentCall.args[2].aMethod)).toBe(true);
+            } else {
+                expect(declaration.mostRecentCall.args[2]).toBe(mockableServiceB);
+            }
+        }
+
+
+        describe('serviceWithMocks method', function() {
 
             it('should throw an exception when invoke for "constant" as well as "value" service', function() {
-                originalModuleInstance.constant('aConstant', 'aConstantValue');
-                originalModuleInstance.constant('aValue', 'aValueValue');
-
-                var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
-
-                expect(function() {
-                    moduleBuilderInstance.withServiceUsingMocks('aConstant');
-                }).toThrow('Services declares with "contact" or "value" are not supported');
-
-                expect(function() {
-                    moduleBuilderInstance.withServiceUsingMocks('aValue');
-                }).toThrow('Services declares with "contact" or "value" are not supported');
+                testMockingOfDependenciesOfConstantAndValueServicesIsNotAllowed('serviceWithMocks');
             });
 
             it('should return the module builder instance', function() {
                 var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
 
-                var result = moduleBuilderInstance.withServiceUsingMocks('aService');
+                var result = moduleBuilderInstance.serviceWithMocks('aServiceFactory');
 
                 expect(result).toBe(moduleBuilderInstance);
             });
 
-        });
 
+            describe('when build() is invoked', function() {
 
-        describe('build method', function() {
+                it('should mock all mockable dependencies', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .serviceWithMocks('aServiceFactory')
+                        .build();
 
-            it('should create a service with mocked dependencies', function() {
-                var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
+                    inject(function(aServiceFactory) {
+                        expect(aServiceFactory).toBeDefined();
+                        assertMockableDepenciesWereMocked(aServiceFactoryFactory, true, true);
+                    });
+                });
 
-                spyOn(angular.mock, 'module').andCallThrough();
+                it('should support mocking dependencies of a "service" registered service', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .serviceWithMocks('aServiceService')
+                        .build();
 
-                moduleBuilderInstance.withServiceUsingMocks('aService').build();
+                    inject(function(aServiceService) {
+                        assertMockableDepenciesWereMocked(AServiceConstructor, true, true);
+                        expect(aServiceService instanceof AServiceConstructor).toBe(true);
+                    });
+                });
 
-                var mockModuleArgs = angular.mock.module.mostRecentCall.args;
-                expect(mockModuleArgs.length).toBe(2);
+                //TODO: add support for "angular.Module#provider" registered services
+                xit('should support mocking dependencies of a "provider" registered service', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .serviceWithMocks('aServiceProvider')
+                        .build();
 
-                expect(mockModuleArgs[0] instanceof Function).toBe(true);
-                expect(emptyInjector.annotate(mockModuleArgs[0])).toEqual(['$provide']);
-
-                var generatedModuleName = mockModuleArgs[1];
-                expect(generatedModuleName).toBe('generatedByNgImprovedTesting#1');
-                expect(angular.module(generatedModuleName)).toBeDefined();
-
-                inject(function($injector, aService, mockableServiceMock, MyResourceMock) {
-                    expect(angular.isObject(aService)).toBe(true);
-                    expect($injector.has('$http')).toBe(true);
-                    expect($injector.has('nonMockableService')).toBe(true);
-                    expect($injector.has('mockableService')).toBe(false);
-                    expect($injector.has('MyResource')).toBe(false);
-
-                    MyResourceMock.query.andReturn([new MyResourceMock({aProperty: 'aValue'})]);
-
-                    expect(aService.queryList()).toEqual([new MyResourceMock({aProperty: 'aValue'})]);
-
-                    expect(mockableServiceMock.propertyFromMockableService)
-                        .toBe(originalMockableService.propertyFromMockableService);
-                    expect(jasmine.isSpy(mockableServiceMock.methodFromMockableService)).toBe(true);
+                    inject(function(aServiceProvider) {
+                        expect(aServiceProvider).toBeDefined();
+                        assertMockableDepenciesWereMocked($getProviderFactory, true, true);
+                    });
                 });
             });
-
         });
 
+
+        describe('serviceWithMocksFor method', function() {
+
+            it('should throw an exception when invoke for "constant" as well as "value" service', function() {
+                testMockingOfDependenciesOfConstantAndValueServicesIsNotAllowed('serviceWithMocksFor');
+            });
+
+            it('should return the module builder instance', function() {
+                var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
+
+                var result = moduleBuilderInstance.serviceWithMocksFor('aServiceFactory', 'toBeMockedService');
+
+                expect(result).toBe(moduleBuilderInstance);
+            });
+
+            describe('when build() is invoked', function() {
+
+                it('only a explicitly specified dependency should be mocked when its mockable', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .serviceWithMocksFor('aServiceFactory', 'mockableServiceB')
+                        .build();
+
+                    inject(function(aServiceFactory) {
+                        expect(aServiceFactory).toBeDefined();
+                        assertMockableDepenciesWereMocked(aServiceFactoryFactory, false, true);
+                    });
+                });
+
+                it('should throw exception when you explicitly want to mock a non-mockable service', function() {
+                    expect(function() {
+                        moduleBuilder.forModule(originalModuleInstance.name)
+                            .serviceWithMocksFor('aServiceFactory', 'nonMockableService')
+                            .build();
+                    }).toThrow('Could not mock the dependency explicitly asked to mock: nonMockableService');
+                });
+
+                it('should support mocking dependencies of a "service" registered service', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .serviceWithMocksFor('aServiceService', 'mockableServiceB')
+                        .build();
+
+                    inject(function(aServiceService) {
+                        assertMockableDepenciesWereMocked(aServiceFactoryFactory, false, true);
+                        expect(aServiceService instanceof AServiceConstructor).toBe(true);
+                    });
+                });
+
+                //TODO: add support for "angular.Module#provider" registered services
+                xit('should support mocking dependencies of a "provider" registered service', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .serviceWithMocksFor('aServiceProvider', 'mockableServiceB')
+                        .build();
+
+                    inject(function(aServiceProvider) {
+                        expect(aServiceProvider).toBeDefined();
+                        assertMockableDepenciesWereMocked($getProviderFactory, false, true);
+                    });
+                });
+            });
+        });
+
+
+        describe('serviceWithMocksExcept method', function() {
+
+            it('should throw an exception when invoke for "constant" as well as "value" service', function() {
+                testMockingOfDependenciesOfConstantAndValueServicesIsNotAllowed('serviceWithMocksExcept');
+            });
+
+            it('should return the module builder instance', function() {
+                var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
+
+                var result = moduleBuilderInstance.serviceWithMocksExcept('aServiceFactory', 'toBeMockedService');
+
+                expect(result).toBe(moduleBuilderInstance);
+            });
+
+            describe('when build() is invoked', function() {
+
+                it('should mock all mockable dependencies except when provided to be excluded', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .serviceWithMocksExcept('aServiceFactory', 'mockableServiceA')
+                        .build();
+
+                    inject(function(aServiceFactory) {
+                        expect(aServiceFactory).toBeDefined();
+                        assertMockableDepenciesWereMocked(aServiceFactoryFactory, false, true);
+                    });
+                });
+
+                it('should ignore (not throw an exception) any non-mockable dependencies when provided to be ' +
+                        'excluded', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .serviceWithMocksExcept('aServiceFactory', 'mockableServiceA', 'nonMockableService')
+                        .build();
+
+                    inject(function(aServiceFactory) {
+                        expect(aServiceFactory).toBeDefined();
+                        assertMockableDepenciesWereMocked(aServiceFactoryFactory, false, true);
+                    });
+                });
+
+                it('should support mocking dependencies of a "service" registered service', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .serviceWithMocksExcept('aServiceService', 'mockableServiceA')
+                        .build();
+
+                    inject(function(aServiceService) {
+                        assertMockableDepenciesWereMocked(aServiceFactoryFactory, false, true);
+                        expect(aServiceService instanceof AServiceConstructor).toBe(true);
+                    });
+                });
+
+                //TODO: add support for "angular.Module#provider" registered services
+                xit('should support mocking dependencies of a "provider" registered service', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .serviceWithMocksExcept('aServiceProvider', 'mockableServiceA')
+                        .build();
+
+                    inject(function(aServiceProvider) {
+                        expect(aServiceProvider).toBeDefined();
+                        assertMockableDepenciesWereMocked(aServiceFactoryFactory, false, true);
+                    });
+                });
+            });
+        });
+
+
+        //TODO: also test "filterWithMocksFor", "filterWithMocksExcept" and "filterAsIs"
+        describe('filterWithMocks method', function() {
+
+            it('should return the module builder instance', function() {
+                var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
+
+                var result = moduleBuilderInstance.filterWithMocks('aFilter');
+
+                expect(result).toBe(moduleBuilderInstance);
+            });
+
+            describe('when build() is invoked', function() {
+
+                it('should mock all mockable dependencies', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .filterWithMocks('aFilter')
+                        .build();
+
+                    inject(function(aFilterFilter) {
+                        expect(aFilterFilter).toBeDefined();
+                        assertMockableDepenciesWereMocked(aFilterFactory, true, true);
+                    });
+                });
+            });
+        });
+
+
+        //TODO: test "controllerWithMocksFor", "controllerWithMocksExcept" and "controllerAsIs"
     });
 
 });

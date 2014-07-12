@@ -39,6 +39,9 @@
         "window": false,
 
         // TODO: remove once the last "xit" has been replaced with an "it"
-        "xit": false
+        "xit": false,
+
+        // TODO: remove once the last "xdescribe" has been replaced with an "describe"
+        "xdescribe": false
     }
 }
