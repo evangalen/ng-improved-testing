@@ -153,23 +153,27 @@ describe('moduleBuilder service', function() {
         }
 
         function assertMockableDepenciesWereMocked(
-                declaration, expectMockableServiceAMocked, expectMockableServiceBMocked) {
+                declaration, expectMockableServiceAMocked, expectMockableServiceBMocked, prependedDependenciesCount) {
+            prependedDependenciesCount = prependedDependenciesCount || 0;
+
             expect(declaration).toHaveBeenCalled();
-            expect(declaration.mostRecentCall.args.length).toBe(3);
-            expect(declaration.mostRecentCall.args[0]).toBe(nonMockableService);
+            expect(declaration.mostRecentCall.args.length).toBe(3 + prependedDependenciesCount);
+            expect(declaration.mostRecentCall.args[prependedDependenciesCount + 0]).toBe(nonMockableService);
 
             if (expectMockableServiceAMocked) {
-                expect(declaration.mostRecentCall.args[1]).not.toBe(mockableServiceA);
-                expect(jasmine.isSpy(declaration.mostRecentCall.args[1].aMethod)).toBe(true);
+                expect(declaration.mostRecentCall.args[prependedDependenciesCount + 1]).not.toBe(mockableServiceA);
+                expect(jasmine.isSpy(declaration.mostRecentCall.args[prependedDependenciesCount + 1].aMethod))
+                    .toBe(true);
             } else {
-                expect(declaration.mostRecentCall.args[1]).toBe(mockableServiceA);
+                expect(declaration.mostRecentCall.args[prependedDependenciesCount + 1]).toBe(mockableServiceA);
             }
 
             if (expectMockableServiceBMocked) {
-                expect(declaration.mostRecentCall.args[2]).not.toBe(mockableServiceB);
-                expect(jasmine.isSpy(declaration.mostRecentCall.args[2].aMethod)).toBe(true);
+                expect(declaration.mostRecentCall.args[prependedDependenciesCount + 2]).not.toBe(mockableServiceB);
+                expect(jasmine.isSpy(declaration.mostRecentCall.args[prependedDependenciesCount + 2].aMethod))
+                    .toBe(true);
             } else {
-                expect(declaration.mostRecentCall.args[2]).toBe(mockableServiceB);
+                expect(declaration.mostRecentCall.args[prependedDependenciesCount + 2]).toBe(mockableServiceB);
             }
         }
 
@@ -395,11 +399,10 @@ describe('moduleBuilder service', function() {
             describe('when build() is invoked', function() {
 
                 it('should mock all mockable dependencies', function() {
-                    var createdScope;
+                    var expectedScopeProperty = {};
 
                     AControllerConstructor.andCallFake(function($scope) {
-                        expect($scope).toBe(createdScope);
-                        $scope.aScopeMethod = angular.noop;
+                        $scope.aProperty = expectedScopeProperty;
                     });
 
                     moduleBuilder.forModule(originalModuleInstance.name)
@@ -407,13 +410,13 @@ describe('moduleBuilder service', function() {
                         .build();
 
                     inject(function($rootScope, $controller) {
-                        var $scope = createdScope = $rootScope.$new();
+                        var $scope = $rootScope.$new();
                         $controller('aController', {$scope: $scope});
 
-                        //TODO: let it support local dependencies
-//                        assertMockableDepenciesWereMocked(AControllerConstructor, true, true);
+                        assertMockableDepenciesWereMocked(AControllerConstructor, true, true, 1);
+                        expect(AControllerConstructor.mostRecentCall.args[0]).toBe($scope);
 
-                        expect($scope.aScopeMethod).toBe(angular.noop);
+                        expect($scope.aProperty).toBe(expectedScopeProperty);
                     });
                 });
             });
