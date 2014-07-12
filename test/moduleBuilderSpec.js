@@ -26,7 +26,7 @@ describe('moduleBuilder service', function() {
      * @constructor
      * @const
      */
-    var aControllerConstructor = jasmine.createSpy();
+    var AControllerConstructor = jasmine.createSpy();
 
     /** @const */
     var $getProviderFactory = jasmine.createSpy().andCallFake(function() {
@@ -40,7 +40,7 @@ describe('moduleBuilder service', function() {
     });
 
     /** @const */
-    var originalModuleInstance = angular.module('moduleBuilderSpecModule', ['ngResource'])
+    var originalModuleInstance = angular.module('moduleBuilderSpecModule', ['ng'])
         .value('nonMockableService', nonMockableService)
         .value('mockableServiceA', mockableServiceA)
         .value('mockableServiceB', mockableServiceB)
@@ -53,7 +53,7 @@ describe('moduleBuilder service', function() {
         })
         .filter('aFilter', ['nonMockableService', 'mockableServiceA', 'mockableServiceB', aFilterFactory])
         .controller('aController',
-                ['nonMockableService', 'notToBeMockedService', 'toBeMockedService', aControllerConstructor]);
+                ['$scope', 'nonMockableService', 'mockableServiceA', 'mockableServiceB', AControllerConstructor]);
 
 
     var moduleBuilder;
@@ -382,6 +382,43 @@ describe('moduleBuilder service', function() {
 
 
         //TODO: test "controllerWithMocksFor", "controllerWithMocksExcept" and "controllerAsIs"
+        describe('controllerWithMocks method', function() {
+
+            it('should return the module builder instance', function() {
+                var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
+
+                var result = moduleBuilderInstance.controllerWithMocks('aController');
+
+                expect(result).toBe(moduleBuilderInstance);
+            });
+
+            describe('when build() is invoked', function() {
+
+                it('should mock all mockable dependencies', function() {
+                    var createdScope;
+
+                    AControllerConstructor.andCallFake(function($scope) {
+                        expect($scope).toBe(createdScope);
+                        $scope.aScopeMethod = angular.noop;
+                    });
+
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .controllerWithMocks('aController')
+                        .build();
+
+                    inject(function($rootScope, $controller) {
+                        var $scope = createdScope = $rootScope.$new();
+                        $controller('aController', {$scope: $scope});
+
+                        //TODO: let it support local dependencies
+//                        assertMockableDepenciesWereMocked(AControllerConstructor, true, true);
+
+                        expect($scope.aScopeMethod).toBe(angular.noop);
+                    });
+                });
+            });
+        });
+
     });
 
 });

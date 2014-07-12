@@ -1,10 +1,10 @@
 ;(function() {
 'use strict';
 
+var numberOfBuildModules = 0;
+
 // @ngInject
 function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
-
-    var numberOfBuildModules = 0;
 
     /**
      * @constructor
@@ -229,38 +229,45 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
                 var type = toBeIncludedModuleComponent.type;
                 var name = toBeIncludedModuleComponent.componentName;
 
-                var dependencies = getModuleComponentDependencies(type, name);
-
+                var dependencyInfoPerName = getModuleComponentDependencies(type, name);
                 var declaredModuleComponent = getDeclaredModuleComponent(type, name);
-                var declaration = declaredModuleComponent.declaration;
+
+                var originalDeclaration = declaredModuleComponent.declaration;
+                var dependencies = injector.annotate(originalDeclaration);
 
                 var annotatedDeclaration = [];
 
-                angular.forEach(dependencies, function (dependencyInfo, dependencyName) {
-                    var shouldBeMocked = dependencyShouldBeMocked(toBeIncludedModuleComponent, dependencyName);
-                    var canBeMocked = mockCreator.canBeMocked(dependencyInfo.instance);
+                angular.forEach(dependencies, function (dependencyName) {
+                    var dependencyInfo = dependencyInfoPerName[dependencyName];
 
-                    if (shouldBeMocked && !canBeMocked &&
-                            toBeIncludedModuleComponent.dependenciesUsage === 'for') {
-                        throw 'Could not mock the dependency explicitly asked to mock: ' + dependencyName;
-                    }
-
-                    var toBeMocked = shouldBeMocked && canBeMocked;
-
-                    if (toBeMocked) {
-                        mockedServices[dependencyName] = dependencyInfo.instance;
+                    if (!dependencyInfo) {
+                        annotatedDeclaration.push(dependencyName);
                     } else {
-                        asIsServices[dependencyName] = dependencyInfo.instance;
-                    }
+                        var shouldBeMocked = dependencyShouldBeMocked(toBeIncludedModuleComponent, dependencyName);
+                        var canBeMocked = mockCreator.canBeMocked(dependencyInfo.instance);
 
-                    annotatedDeclaration.push(dependencyName + (toBeMocked ? 'Mock' : ''));
+                        if (shouldBeMocked && !canBeMocked &&
+                            toBeIncludedModuleComponent.dependenciesUsage === 'for') {
+                            throw 'Could not mock the dependency explicitly asked to mock: ' + dependencyName;
+                        }
+
+                        var toBeMocked = shouldBeMocked && canBeMocked;
+
+                        if (toBeMocked) {
+                            mockedServices[dependencyName] = dependencyInfo.instance;
+                        } else {
+                            asIsServices[dependencyName] = dependencyInfo.instance;
+                        }
+
+                        annotatedDeclaration.push(dependencyName + (toBeMocked ? 'Mock' : ''));
+                    }
                 });
 
                 var originalNonAnnotatedServiceDeclaration;
-                if (angular.isArray(declaration)) {
-                    originalNonAnnotatedServiceDeclaration = declaration[declaration.length - 1];
+                if (angular.isArray(originalDeclaration)) {
+                    originalNonAnnotatedServiceDeclaration = originalDeclaration[originalDeclaration.length - 1];
                 } else {
-                    originalNonAnnotatedServiceDeclaration = declaration;
+                    originalNonAnnotatedServiceDeclaration = originalDeclaration;
                 }
 
                 annotatedDeclaration.push(originalNonAnnotatedServiceDeclaration);
@@ -286,8 +293,6 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
                 }
             }
 
-            numberOfBuildModules += 1;
-
             var buildModuleName = 'generatedByNgImprovedTesting#' + numberOfBuildModules;
 
             /** @type Object.<Object> */
@@ -310,6 +315,8 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
                     handleWithMocksComponentKind(toBeIncludedModuleComponent);
                 }
             });
+
+            numberOfBuildModules += 1;
 
             return angular.mock.module(function($provide, $filterProvider, $controllerProvider) {
                 var providers = {
