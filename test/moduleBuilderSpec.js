@@ -5,10 +5,10 @@ describe('moduleBuilder service', function() {
     var nonMockableService = Object.freeze({aProperty: 'aValue'});
 
     /** @const */
-    var mockableServiceA = Object.freeze({aMethod: angular.noop});
+    var mockableServiceA = Object.freeze({aMethod: function() {}});
 
     /** @const */
-    var mockableServiceB = Object.freeze({aMethod: angular.noop});
+    var mockableServiceB = Object.freeze({aMethod: function() {}});
 
 
     /**
@@ -33,10 +33,14 @@ describe('moduleBuilder service', function() {
         return {};
     });
 
+    /** @const */
+    var aFilter = function(input) {
+        return input;
+    };
+
+    /** @const */
     var aFilterFactory = jasmine.createSpy().andCallFake(function() {
-        return function(input) {
-            return input;
-        };
+        return aFilter;
     });
 
     /** @const */
@@ -178,6 +182,7 @@ describe('moduleBuilder service', function() {
         }
 
 
+
         describe('serviceWithMocks method', function() {
 
             it('should throw an exception when invoke for "constant" as well as "value" service', function() {
@@ -217,16 +222,12 @@ describe('moduleBuilder service', function() {
                     });
                 });
 
-                //TODO: add support for "angular.Module#provider" registered services
-                xit('should support mocking dependencies of a "provider" registered service', function() {
-                    moduleBuilder.forModule(originalModuleInstance.name)
-                        .serviceWithMocks('aServiceProvider')
-                        .build();
-
-                    inject(function(aServiceProvider) {
-                        expect(aServiceProvider).toBeDefined();
-                        assertMockableDepenciesWereMocked($getProviderFactory, true, true);
-                    });
+                it('should throw an exception when invoke for "provider" service', function() {
+                    expect(function() {
+                        moduleBuilder.forModule(originalModuleInstance.name)
+                            .serviceWithMocks('aServiceProvider')
+                            .build();
+                    }).toThrow('Services declared with "provider" are currently not supported');
                 });
             });
         });
@@ -241,7 +242,7 @@ describe('moduleBuilder service', function() {
             it('should return the module builder instance', function() {
                 var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
 
-                var result = moduleBuilderInstance.serviceWithMocksFor('aServiceFactory', 'toBeMockedService');
+                var result = moduleBuilderInstance.serviceWithMocksFor('aServiceFactory', 'mockableServiceB');
 
                 expect(result).toBe(moduleBuilderInstance);
             });
@@ -278,16 +279,12 @@ describe('moduleBuilder service', function() {
                     });
                 });
 
-                //TODO: add support for "angular.Module#provider" registered services
-                xit('should support mocking dependencies of a "provider" registered service', function() {
-                    moduleBuilder.forModule(originalModuleInstance.name)
-                        .serviceWithMocksFor('aServiceProvider', 'mockableServiceB')
-                        .build();
-
-                    inject(function(aServiceProvider) {
-                        expect(aServiceProvider).toBeDefined();
-                        assertMockableDepenciesWereMocked($getProviderFactory, false, true);
-                    });
+                it('should throw an exception when invoke for "provider" service', function() {
+                    expect(function() {
+                        moduleBuilder.forModule(originalModuleInstance.name)
+                            .serviceWithMocksFor('aServiceProvider', 'mockableServiceB')
+                            .build();
+                    }).toThrow('Services declared with "provider" are currently not supported');
                 });
             });
         });
@@ -302,7 +299,7 @@ describe('moduleBuilder service', function() {
             it('should return the module builder instance', function() {
                 var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
 
-                var result = moduleBuilderInstance.serviceWithMocksExcept('aServiceFactory', 'toBeMockedService');
+                var result = moduleBuilderInstance.serviceWithMocksExcept('aServiceFactory', 'mockableServiceA');
 
                 expect(result).toBe(moduleBuilderInstance);
             });
@@ -343,22 +340,18 @@ describe('moduleBuilder service', function() {
                     });
                 });
 
-                //TODO: add support for "angular.Module#provider" registered services
-                xit('should support mocking dependencies of a "provider" registered service', function() {
-                    moduleBuilder.forModule(originalModuleInstance.name)
-                        .serviceWithMocksExcept('aServiceProvider', 'mockableServiceA')
-                        .build();
-
-                    inject(function(aServiceProvider) {
-                        expect(aServiceProvider).toBeDefined();
-                        assertMockableDepenciesWereMocked(aServiceFactoryFactory, false, true);
-                    });
+                it('should throw an exception when invoke for "provider" service', function() {
+                    expect(function() {
+                        moduleBuilder.forModule(originalModuleInstance.name)
+                            .serviceWithMocksExcept('aServiceProvider', 'mockableServiceA')
+                            .build();
+                    }).toThrow('Services declared with "provider" are currently not supported');
                 });
             });
         });
 
 
-        //TODO: also test "filterWithMocksFor", "filterWithMocksExcept" and "filterAsIs"
+
         describe('filterWithMocks method', function() {
 
             it('should return the module builder instance', function() {
@@ -383,6 +376,105 @@ describe('moduleBuilder service', function() {
                 });
             });
         });
+
+
+        describe('filterWithMocksFor method', function() {
+
+            it('should return the module builder instance', function() {
+                var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
+
+                var result = moduleBuilderInstance.filterWithMocksFor('aFilter', 'mockableServiceB');
+
+                expect(result).toBe(moduleBuilderInstance);
+            });
+
+            describe('when build() is invoked', function() {
+
+                it('only a explicitly specified dependency should be mocked when its mockable', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .filterWithMocksFor('aFilter', 'mockableServiceB')
+                        .build();
+
+                    inject(function(aFilterFilter) {
+                        expect(aFilterFilter).toBeDefined();
+                        assertMockableDepenciesWereMocked(aFilterFactory, false, true);
+                    });
+                });
+
+                it('should throw exception when you explicitly want to mock a non-mockable service', function() {
+                    expect(function() {
+                        moduleBuilder.forModule(originalModuleInstance.name)
+                            .filterWithMocksFor('aFilter', 'nonMockableService')
+                            .build();
+                    }).toThrow('Could not mock the dependency explicitly asked to mock: nonMockableService');
+                });
+            });
+        });
+
+
+        describe('filterWithMocksExcept method', function() {
+
+            it('should return the module builder instance', function() {
+                var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
+
+                var result = moduleBuilderInstance.filterWithMocksExcept('aFilter', 'mockableServiceA');
+
+                expect(result).toBe(moduleBuilderInstance);
+            });
+
+            describe('when build() is invoked', function() {
+
+                it('should mock all mockable dependencies except when provided to be excluded', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .filterWithMocksExcept('aFilter', 'mockableServiceA')
+                        .build();
+
+                    inject(function(aFilterFilter) {
+                        expect(aFilterFilter).toBeDefined();
+                        assertMockableDepenciesWereMocked(aServiceFactoryFactory, false, true);
+                    });
+                });
+
+                it('should ignore (not throw an exception) any non-mockable dependencies when provided to be ' +
+                    'excluded', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .filterWithMocksExcept('aFilter', 'mockableServiceA', 'nonMockableService')
+                        .build();
+
+                    inject(function(aFilterFilter) {
+                        expect(aFilterFilter).toBeDefined();
+                        assertMockableDepenciesWereMocked(aFilterFactory, false, true);
+                    });
+                });
+            });
+        });
+
+
+        describe('filterAsIs method', function() {
+
+            it('should return the module builder instance', function() {
+                var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
+
+                var result = moduleBuilderInstance.filterAsIs('aFilter');
+
+                expect(result).toBe(moduleBuilderInstance);
+            });
+
+            describe('when build() is invoked', function() {
+
+                it('should include the filter as is', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .filterAsIs('aFilter')
+                        .build();
+
+                    inject(function(aFilterFilter) {
+                        expect(aFilterFilter).toBe(aFilter);
+                        assertMockableDepenciesWereMocked(aFilterFactory, false, false);
+                    });
+                });
+            });
+        });
+
 
 
         //TODO: test "controllerWithMocksFor", "controllerWithMocksExcept" and "controllerAsIs"
@@ -421,6 +513,126 @@ describe('moduleBuilder service', function() {
                 });
             });
         });
+
+
+        describe('controllerWithMocksFor method', function() {
+
+            it('should return the module builder instance', function() {
+                var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
+
+                var result = moduleBuilderInstance.controllerWithMocksFor('aController', 'mockableServiceB');
+
+                expect(result).toBe(moduleBuilderInstance);
+            });
+
+            describe('when build() is invoked', function() {
+
+                it('only a explicitly specified dependency should be mocked when its mockable', function() {
+                    var expectedScopeProperty = {};
+
+                    AControllerConstructor.andCallFake(function($scope) {
+                        $scope.aProperty = expectedScopeProperty;
+                    });
+
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .controllerWithMocksFor('aController', 'mockableServiceB')
+                        .build();
+
+                    inject(function($rootScope, $controller) {
+                        var $scope = $rootScope.$new();
+                        $controller('aController', {$scope: $scope});
+
+                        assertMockableDepenciesWereMocked(AControllerConstructor, false, true, 1);
+                        expect(AControllerConstructor.mostRecentCall.args[0]).toBe($scope);
+
+                        expect($scope.aProperty).toBe(expectedScopeProperty);
+                    });
+                });
+
+                it('should throw exception when you explicitly want to mock a non-mockable service', function() {
+                    expect(function() {
+                        moduleBuilder.forModule(originalModuleInstance.name)
+                            .controllerWithMocksFor('aController', 'nonMockableService')
+                            .build();
+                    }).toThrow('Could not mock the dependency explicitly asked to mock: nonMockableService');
+                });
+            });
+        });
+
+
+        describe('controllerWithMocksExcept method', function() {
+
+            it('should return the module builder instance', function() {
+                var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
+
+                var result = moduleBuilderInstance.controllerWithMocksExcept('aController', 'mockableServiceB');
+
+                expect(result).toBe(moduleBuilderInstance);
+            });
+
+            describe('when build() is invoked', function() {
+
+                it('only a explicitly specified dependency should be mocked when its mockable', function() {
+                    var expectedScopeProperty = {};
+
+                    AControllerConstructor.andCallFake(function($scope) {
+                        $scope.aProperty = expectedScopeProperty;
+                    });
+
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .controllerWithMocksExcept('aController', 'mockableServiceA', 'nonMockableService')
+                        .build();
+
+                    inject(function($rootScope, $controller) {
+                        var $scope = $rootScope.$new();
+                        $controller('aController', {$scope: $scope});
+
+                        assertMockableDepenciesWereMocked(AControllerConstructor, false, true, 1);
+                        expect(AControllerConstructor.mostRecentCall.args[0]).toBe($scope);
+
+                        expect($scope.aProperty).toBe(expectedScopeProperty);
+                    });
+                });
+            });
+        });
+
+
+        describe('controllerAsIs method', function() {
+
+            it('should return the module builder instance', function() {
+                var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
+
+                var result = moduleBuilderInstance.controllerAsIs('aController');
+
+                expect(result).toBe(moduleBuilderInstance);
+            });
+
+            describe('when build() is invoked', function() {
+
+                it('should include the controller as is', function() {
+                    var expectedScopeProperty = {};
+
+                    AControllerConstructor.andCallFake(function($scope) {
+                        $scope.aProperty = expectedScopeProperty;
+                    });
+
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .controllerAsIs('aController')
+                        .build();
+
+                    inject(function($rootScope, $controller) {
+                        var $scope = $rootScope.$new();
+                        $controller('aController', {$scope: $scope});
+
+                        assertMockableDepenciesWereMocked(AControllerConstructor, false, false, 1);
+                        expect(AControllerConstructor.mostRecentCall.args[0]).toBe($scope);
+
+                        expect($scope.aProperty).toBe(expectedScopeProperty);
+                    });
+                });
+            });
+        });
+
 
     });
 
