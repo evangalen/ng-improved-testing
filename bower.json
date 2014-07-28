@@ -1,6 +1,6 @@
 {
     "name": "ng-improved-testing",
-    "version": "0.1.1-snapshot",
+    "version": "0.1.1",
     "dependencies": {
         "angular": "~1.2",
         "ng-module-introspector": "0.1.1"
