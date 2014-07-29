@@ -10,6 +10,5 @@ Changes
 0.1.1
  - Fixes #1 (Error on circular module dependencies.)
  - Support for testing directives with mocked dependencies
- - Support for "provider" registered services
 
 0.1.0 Initial release
