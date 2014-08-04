@@ -1,13 +1,21 @@
 {
-    "name": "ng-improved-testing",
-    "version": "0.1.1",
-    "dependencies": {
-        "angular": "~1.2",
-        "ng-module-introspector": "0.1.1"
-    },
-    "devDependencies": {
-        "jasmine": "1.3.1",
-        "angular-mocks": "~1.2",
-        "angular-resource": "~1.2"
-    }
+  "name": "ng-improved-testing",
+  "version": "0.1.2-snapshot",
+  "dependencies": {
+    "angular-1.0": "angular#~1.0",
+    "angular-1.2": "angular#~1.2",
+    "angular-1.3-nightly": "angular#~1.3",
+    "ng-module-introspector": "0.1.1"
+  },
+  "devDependencies": {
+    "jasmine": "1.3.1",
+    "angular-animation-1.2": "angular-animate#~1.2",
+    "angular-animation-1.3-nightly": "angular-animate#~1.3",
+    "angular-mocks-1.0": "angular-mocks#~1.0",
+    "angular-mocks-1.2": "angular-mocks#~1.2",
+    "angular-mocks-1.3-nightly": "angular-mocks#~1.3"
+  },
+  "resolutions": {
+    "angular": "~1.2"
+  }
 }

@@ -34,8 +34,11 @@ function MockCreator() {
             return false;
         }
 
-        for (var propertyName in value) {
-            if (value.hasOwnProperty(propertyName) && angular.isFunction(value[propertyName])) {
+        for (var propertyName in value) { // jshint ignore:line
+            var propertyValue = value[propertyName];
+
+            if (angular.isFunction(propertyValue) && propertyName !== 'constructor' &&
+                    propertyValue !== Object.prototype[propertyName]) {
                 return true;
             }
         }
@@ -54,10 +57,10 @@ function MockCreator() {
 
         var Constructor = jasmine.createSpy();
 
-        copyPropertiesAndReplaceWithSpies(value, Constructor);
+        copyPropertiesAndReplaceWithSpies(value, Constructor, true);
 
         Constructor.prototype = Object.create(value.prototype);
-        copyPropertiesAndReplaceWithSpies(value.prototype, Constructor.prototype, 'constructor');
+        copyPropertiesAndReplaceWithSpies(value.prototype, Constructor.prototype, true, 'constructor');
         Constructor.prototype.constructor = value.prototype.constructor;
 
         return Constructor;
@@ -81,7 +84,7 @@ function MockCreator() {
     function createObjectMock(obj) {
         var result = {};
 
-        copyPropertiesAndReplaceWithSpies(obj, result);
+        copyPropertiesAndReplaceWithSpies(obj, result, false, 'constructor');
 
         return result;
     }
@@ -89,17 +92,23 @@ function MockCreator() {
     /**
      * @param {Object} source
      * @param {Object} target
+     * @param {boolean} onlyOwnProperties
      * @param {...string} ignoreProperties
      */
-    function copyPropertiesAndReplaceWithSpies(source, target, ignoreProperties) {
-        ignoreProperties = Array.prototype.slice.call(arguments, 2);
+    function copyPropertiesAndReplaceWithSpies(source, target, onlyOwnProperties, ignoreProperties) {
+        ignoreProperties = Array.prototype.slice.call(arguments, 3);
 
-        for (var propertyName in source) {
-            if (source.hasOwnProperty(propertyName) &&
+        for (var propertyName in source) { // jshint ignore:line
+            if (onlyOwnProperties && !source.hasOwnProperty(propertyName)) {
+                continue;
+            }
+
+            var propertyValue = source[propertyName];
+
+            if ((onlyOwnProperties || (!onlyOwnProperties && propertyValue !== Object.prototype[propertyName])) &&
                     (!ignoreProperties || ignoreProperties.indexOf(propertyName) === -1)) {
-                var propertyValue = source[propertyName];
                 if (angular.isFunction(propertyValue)) {
-                    target[propertyName] = jasmine.createSpy();
+                    target[propertyName] = jasmine.createSpy(propertyName);
                 } else {
                     target[propertyName] = propertyValue;
                 }

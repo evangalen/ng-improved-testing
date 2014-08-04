@@ -22,6 +22,18 @@ describe('mockCreator service', function() {
             it('an object with at least one method', function() {
                 expect(mockCreator.canBeMocked({aMethod: function() {}})).toBe(true);
             });
+
+            it('an object with an inherited property', function() {
+                var ParentConstructor = function() {};
+                ParentConstructor.prototype.anInheritedMethod = function() {};
+
+                var Constructor = function() {};
+                Constructor.prototype = Object.create(ParentConstructor.prototype);
+                Constructor.prototype.constructor = Constructor;
+                Constructor.prototype.anInstanceMethod = function() {};
+
+                expect(mockCreator.canBeMocked(new Constructor())).toBe(true);
+            });
         });
 
 
@@ -33,6 +45,20 @@ describe('mockCreator service', function() {
 
             it('an object with properties but no methods', function() {
                 expect(mockCreator.canBeMocked({aProperty: 'aValue'})).toBe(false);
+            });
+
+            it('an object with inherited properties but no method', function() {
+                var ParentConstructor = function() {};
+                ParentConstructor.aStaticMethodOfParent = function() {};
+                ParentConstructor.prototype.anInheritedConstant = 'anInheritedValue';
+
+                var Constructor = function() {};
+                Constructor.aStaticMethod = function() {};
+                Constructor.prototype = Object.create(ParentConstructor.prototype);
+                Constructor.prototype.constructor = Constructor;
+                Constructor.prototype.aPrototypeConstant = 'aPrototypeConstant';
+
+                expect(mockCreator.canBeMocked(new Constructor())).toBe(false);
             });
 
             it('anything other than a function or an object', function() {
@@ -180,12 +206,8 @@ describe('mockCreator service', function() {
             it('should consist of the same properties', function() {
                 var result = mockCreator.createMock(obj);
 
-                var ownEnumerablePropertyNames = getOwnEnumerablePropertyNames(result);
-                expect(ownEnumerablePropertyNames.length).toBe(4);
-                expect(ownEnumerablePropertyNames.indexOf('aConstant') !== -1).toBe(true);
-                expect(ownEnumerablePropertyNames.indexOf('anotherConstant') !== -1).toBe(true);
-                expect(ownEnumerablePropertyNames.indexOf('aMethod') !== -1).toBe(true);
-                expect(ownEnumerablePropertyNames.indexOf('anotherMethod') !== -1).toBe(true);
+                expect(Object.getOwnPropertyNames(result))
+                    .toEqual(['aConstant', 'anotherConstant', 'aMethod', 'anotherMethod']);
             });
 
             it('should have their non-methods properties copied', function() {
@@ -203,6 +225,33 @@ describe('mockCreator service', function() {
                 expect(createdSpies[1]).toBe(result.anotherMethod);
             });
 
+            it('should also contains all inherited properties with a jasmine spy for each method', function() {
+                var ParentConstructor = function() {};
+                ParentConstructor.aStaticMethodOfParent = function() {};
+                ParentConstructor.prototype.anInheritedConstant = 'anInheritedValue';
+                ParentConstructor.prototype.anInheritedMethod = function() {};
+
+                var Constructor = function() {};
+                Constructor.aStaticMethod = function() {};
+                Constructor.prototype = Object.create(ParentConstructor.prototype);
+                Constructor.prototype.constructor = Constructor;
+                Constructor.prototype.anInstanceMethod = function() {};
+                Constructor.prototype.aPrototypeConstant = 'aPrototypeConstant';
+
+                var result = mockCreator.createMock(new Constructor());
+
+                expect(Object.getOwnPropertyNames(result))
+                    .toEqual(['anInstanceMethod', 'aPrototypeConstant', 'anInheritedConstant', 'anInheritedMethod']);
+
+                expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
+                expect(result.anInheritedConstant).toBe(ParentConstructor.prototype.anInheritedConstant);
+                expect(result.aPrototypeConstant).toBe(Constructor.prototype.aPrototypeConstant);
+
+                expect(createdSpies.length).toBe(2);
+                expect(createdSpies[0]).toBe(result.anInstanceMethod);
+                expect(createdSpies[1]).toBe(result.anInheritedMethod);
+            });
+
         });
 
 
@@ -213,6 +262,10 @@ describe('mockCreator service', function() {
             });
 
             it('an object with properties but no methods', function() {
+                doTestCreateMockThrowsException({aProperty: 'aValue'});
+            });
+
+            it('an object with inherited properties but no methods', function() {
                 doTestCreateMockThrowsException({aProperty: 'aValue'});
             });
 
@@ -235,19 +288,6 @@ describe('mockCreator service', function() {
                 }).toThrow('Could not mock provided value: ' + value);
             }
         });
-
-
-        function getOwnEnumerablePropertyNames(obj) {
-            var result = [];
-
-            for (var propertyName in obj) {
-                if (obj.hasOwnProperty(propertyName)) {
-                    result.push(propertyName);
-                }
-            }
-
-            return result;
-        }
 
     });
 });

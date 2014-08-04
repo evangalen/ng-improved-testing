@@ -1,6 +1,9 @@
 ;(function() {
 'use strict';
 
+/** @const */
+var angular1_0 = angular.version.full.indexOf('1.0.') === 0;
+
 var numberOfBuildModules = 0;
 
 // @ngInject
@@ -92,6 +95,17 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
             ensureNotAConstantOrValueService(serviceName);
             notToBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
             includeComponent('service', serviceName, 'withMocks', 'except', notToBeMockedDependencies);
+            return this;
+        };
+
+        /**
+         * Including an actual service (and not a mocked one) in the module
+         *
+         * @param {string} serviceName name of the service to be included in the to be build module
+         * @returns {moduleIntrospectorFactory.ModuleBuilder}
+         */
+        this.serviceAsIs = function(serviceName) {
+            includeComponent('service', serviceName, 'asIs');
             return this;
         };
 
@@ -296,7 +310,7 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
                 var type = toBeIncludedModuleComponent.type;
                 var name = toBeIncludedModuleComponent.componentName;
 
-                if (type === 'controller' || type === 'filter' || type === 'directive') {
+                if (type === 'controller' || type === 'filter' || type === 'directive' || type === 'animation') {
                     var dependencies = getModuleComponentDependencies(type, name);
 
                     angular.forEach(dependencies, function(dependencyInfo, dependencyName) {
@@ -323,11 +337,6 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
 
                 var dependencyInfoPerName = getModuleComponentDependencies(type, name);
                 var declaredModuleComponent = getDeclaredModuleComponent(type, name);
-
-                if (declaredModuleComponent.providerName === '$provide' &&
-                        declaredModuleComponent.providerMethod === 'provider') {
-                    throw 'Services declared with "provider" are currently not supported';
-                }
 
                 var originalDeclaration = declaredModuleComponent.declaration;
                 var dependencies = injector.annotate(originalDeclaration);
@@ -369,6 +378,11 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
 
                 annotatedDeclaration.push(originalNonAnnotatedServiceDeclaration);
 
+                if (declaredModuleComponent.providerName === '$provide' &&
+                        declaredModuleComponent.providerMethod === 'provider') {
+                    annotatedDeclaration = {$get: annotatedDeclaration};
+                }
+
                 declarations[name] = {
                     providerName: declaredModuleComponent.providerName,
                     providerMethod: declaredModuleComponent.providerMethod,
@@ -389,6 +403,35 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
                     throw 'Invalid dependencies usage: ' + dependenciesUsage;
                 }
             }
+
+            function configureProviders(callback) {
+                if (angular1_0) {
+                    return function ($provide, $filterProvider, $controllerProvider, $compileProvider) {
+                        var providers = {
+                            $provide: $provide,
+                            $filterProvider: $filterProvider,
+                            $controllerProvider: $controllerProvider,
+                            $compileProvider: $compileProvider
+                        };
+
+                        callback(providers);
+                    };
+                } else {
+                    return function ($provide, $filterProvider, $controllerProvider, $compileProvider,
+                            $animateProvider) {
+                        var providers = {
+                            $provide: $provide,
+                            $filterProvider: $filterProvider,
+                            $controllerProvider: $controllerProvider,
+                            $compileProvider: $compileProvider,
+                            $animateProvider: $animateProvider
+                        };
+
+                        callback(providers);
+                    };
+                }
+            }
+
 
             var buildModuleName = 'generatedByNgImprovedTesting#' + numberOfBuildModules;
 
@@ -415,30 +458,21 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
 
             numberOfBuildModules += 1;
 
-            return angular.mock.module(function(
-                    $provide, $filterProvider, $controllerProvider, $compileProvider, $animateProvider) {
-                var providers = {
-                    $provide: $provide,
-                    $filterProvider: $filterProvider,
-                    $controllerProvider: $controllerProvider,
-                    $compileProvider: $compileProvider,
-                    $animateProvider: $animateProvider
-                };
-
+            return angular.mock.module(configureProviders(function(providers) {
                 angular.forEach(mockedServices, function(originalService, serviceName) {
                     var mockedService = mockCreator.createMock(originalService);
-                    $provide.value(serviceName + 'Mock', mockedService);
+                    providers.$provide.value(serviceName + 'Mock', mockedService);
                 });
 
                 angular.forEach(asIsServices, function(originalService, serviceName) {
-                    $provide.value(serviceName, originalService);
+                    providers.$provide.value(serviceName, originalService);
                 });
 
                 angular.forEach(declarations, function(declarationInfo, declarationName) {
                     providers[declarationInfo.providerName][declarationInfo.providerMethod](
-                            declarationName, declarationInfo.declaration);
+                        declarationName, declarationInfo.declaration);
                 });
-            }, buildModule.name);
+            }), buildModule.name);
         };
 
     }

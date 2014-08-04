@@ -26,8 +26,16 @@ module.exports = function(grunt) {
             }
         },
         karma: {
-            unit: {
-                configFile: 'karma.conf.js',
+            angular_1_0: {
+                configFile: 'karma-angular-1.0.conf.js',
+                singleRun: true
+            },
+            angular_1_2: {
+                configFile: 'karma-angular-1.2.conf.js',
+                singleRun: true
+            },
+            angular_1_3_nightly: {
+                configFile: 'karma-angular-1.3-nightly.conf.js',
                 singleRun: true
             }
         },
