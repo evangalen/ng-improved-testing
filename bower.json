@@ -1,6 +1,6 @@
 {
   "name": "ng-improved-testing",
-  "version": "0.1.3",
+  "version": "0.1.4-snapshot",
   "dependencies": {
     "angular-1.0": "angular#~1.0",
     "angular-1.2": "angular#~1.2",
