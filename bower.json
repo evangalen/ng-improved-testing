@@ -1,6 +1,9 @@
 {
   "name": "ng-improved-testing",
   "version": "0.1.4-snapshot",
+  "authors": [
+    "Emil van Galen <emil.van.galen@gmail.com>"
+  ],
   "dependencies": {
     "angular-1.0": "angular#~1.0",
     "angular-1.2": "angular#~1.2",
