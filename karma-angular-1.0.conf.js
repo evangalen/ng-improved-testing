@@ -9,11 +9,11 @@ module.exports = function(config) {
         files: [
             'bower_components/angular-1.0/angular.js',
             'bower_components/ng-module-introspector/ng-module-introspector.js',
+            'bower_components/angular-mocks-1.0/angular-mocks.js',
             'src/module.js',
             'src/mockCreator.js',
             'src/moduleBuilder.js',
             'src/exports.js',
-            'bower_components/angular-mocks-1.0/angular-mocks.js',
             'test/**/*.js'
         ]
 

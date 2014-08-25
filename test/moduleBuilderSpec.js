@@ -161,11 +161,11 @@ describe('moduleBuilder service', function() {
             expect(angular.isFunction(result.build)).toBe(true);
         });
 
-        it('should create an angular injector for ["ng", <module-name>]', function() {
+        it('should create an angular injector for ["ng", "ngMock", <module-name>]', function() {
             moduleBuilder.forModule(originalModuleInstance.name);
 
             expect(createdInjector).toBeDefined();
-            expect(angular.injector).toHaveBeenCalledWith(['ng', originalModuleInstance.name]);
+            expect(angular.injector).toHaveBeenCalledWith(['ng', 'ngMock', originalModuleInstance.name]);
         });
 
         it('should create a module introspector', function() {
@@ -877,7 +877,7 @@ describe('moduleBuilder service', function() {
         });
 
 
-        describe('animationWithMocks method' + (angular1_0 ? ' (not supported by angular 1.0) ' : ''), function() {
+        describe('animationWithMocks method (not available when using angular 1.0)', function() {
 
             if (angular1_0) {
                 return;
@@ -906,7 +906,7 @@ describe('moduleBuilder service', function() {
 
 
 
-        describe('animationWithMocksFor method' + (angular1_0 ? ' (not supported by angular 1.0) ' : ''), function() {
+        describe('animationWithMocksFor method (not available when using angular 1.0)', function() {
 
             if (angular1_0) {
                 return;
@@ -942,7 +942,7 @@ describe('moduleBuilder service', function() {
         });
 
 
-        describe('animationWithMocksExcept method', function() {
+        describe('animationWithMocksExcept method (not available when using angular 1.0)', function() {
 
             if (angular1_0) {
                 return;
@@ -974,7 +974,7 @@ describe('moduleBuilder service', function() {
         });
 
 
-        describe('animationAsIs method', function() {
+        describe('animationAsIs method (not available when using angular 1.0)', function() {
 
             if (angular1_0) {
                 return;
@@ -1027,4 +1027,65 @@ describe('moduleBuilder service', function() {
         });
     });
 
+    describe('should allow mocking dependencies which are added during AngularJS bootstrapping', function() {
+
+        it('like the $log service', function() {
+            var $logUsingServiceFactoryFactory = jasmine.createSpy().andCallFake(function($log) {
+                return {
+                    writeToLog: function(message) {
+                        return $log.log(message);
+                    }
+                };
+            });
+
+            var appModule = angular.module('$logUsingServiceModule', []);
+
+            appModule.factory('$logUsingService', ['$log', $logUsingServiceFactoryFactory]);
+
+
+            moduleBuilder.forModule(appModule.name)
+                .serviceWithMocks('$logUsingService')
+                .build();
+
+            inject(function($logUsingService, $logMock) {
+                $logUsingService.writeToLog('loggedMessage');
+
+                expect($logMock.log).toHaveBeenCalledWith('loggedMessage');
+            });
+        });
+
+
+        if (!angular1_0) {
+
+            it('like the $location service (not provided by "ngMock" module of angular 1.0)', function() {
+
+
+                var $locationUsingServiceFactoryFactory = jasmine.createSpy().andCallFake(function($location) {
+                    return {
+                        completeUrl: function() {
+                            return $location.absUrl();
+                        }
+                    };
+                });
+
+                var appModule = angular.module('$locationUsingServiceModule', []);
+
+                appModule.factory('$locationUsingService', ['$location', $locationUsingServiceFactoryFactory]);
+
+
+                moduleBuilder.forModule(appModule.name)
+                    .serviceWithMocks('$locationUsingService')
+                    .build();
+
+                inject(function($locationUsingService, $locationMock) {
+                    expect($locationMock).not.toBeNull();
+
+                    $locationMock.absUrl.andReturn('http://aComplete/url');
+
+                    expect($locationUsingService.completeUrl()).toBe('http://aComplete/url');
+                });
+            });
+        }
+
+    });
 });
