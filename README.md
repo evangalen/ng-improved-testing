@@ -7,6 +7,9 @@ For more information about ngImprovedTesting read this blog [post](http://blog.j
 
 Changes
 -------
+0.1.3
+ - Fixes #2 (Internally created $injector doesn't include "ngMock")
+
 0.1.2
  - Support for AngularJS 1.0 (as well as the latest stable 1.3)
  - Support for "provider" registered services
