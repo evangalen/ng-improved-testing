@@ -1,6 +1,6 @@
 ngImprovedTesting
 ===================
-[![dependencies](https://david-dm.org/evangalen/ng-improved-testing.png)](https://david-dm.org//evangalen/ng-improved-testing)
+[![devDependency Status](https://david-dm.org/evangalen/ng-improved-testing/dev-status.svg)](https://david-dm.org/evangalen/ng-improved-testing#info=devDependencies)
 
 Improves AngularJS testing
 
