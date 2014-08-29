@@ -2,7 +2,7 @@ ngImprovedTesting
 ===================
 
 [![Dependency Status](https://david-dm.org/bower/bower.svg)](https://david-dm.org/bower/bower)
-[![dependencies](https://david-dm.org/bahmutov/xplain.png)](https://david-dm.org/bahmutov/xplain)
+[![dependencies](https://david-dm.org//evangalen/ng-improved-testing.png)](https://david-dm.org//evangalen/ng-improved-testing)
 
 Improves AngularJS testing
 
