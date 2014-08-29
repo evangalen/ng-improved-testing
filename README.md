@@ -1,6 +1,9 @@
 ngImprovedTesting
 ===================
 
+[![Dependency Status](https://david-dm.org/bower/bower.svg)](https://david-dm.org/bower/bower)
+[![dependencies](https://david-dm.org/bahmutov/xplain.png)](https://david-dm.org/bahmutov/xplain)
+
 Improves AngularJS testing
 
 For more information about ngImprovedTesting read this blog [post](http://blog.jdriven.com/2014/07/ng-improved-testing-mock-testing-for-angularjs-made-easy/).
