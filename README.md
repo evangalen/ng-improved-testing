@@ -1,4 +1,4 @@
-# ngImprovedTesting &nbsp;[![Travis build status](https://travis-ci.org/evangalen/ng-improved-testing.png?branch=master)](https://travis-ci.org/evangalen/ng-improved-testing)&nbsp;[![Bower version](https://badge.fury.io/bo/ng-improved-testing.svg)](http://badge.fury.io/bo/ng-improved-testing)
+# ngImprovedTesting &nbsp;[![Travis build status](https://travis-ci.org/evangalen/ng-improved-testing.png?branch=master)](https://travis-ci.org/evangalen/ng-improved-testing)&nbsp;[![Coverage Status](https://coveralls.io/repos/evangalen/ng-improved-testing/badge.png)](https://coveralls.io/r/evangalen/ng-improved-testing?branch=coveralls-setting)&nbsp;[![Bower version](https://badge.fury.io/bo/ng-improved-testing.svg)](http://badge.fury.io/bo/ng-improved-testing)
 
 Improves AngularJS testing
 
