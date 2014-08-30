@@ -10,6 +10,7 @@
     "grunt-contrib-uglify": "0.5.1",
     "grunt-contrib-watch": "0.6.1",
     "grunt-karma": "0.8.3",
+    "grunt-karma-coveralls": "2.5.1",
     "grunt-ng-annotate": "0.3.2",
     "karma-coverage": "0.2.6",
     "karma-jasmine": "0.1.5",
@@ -18,7 +19,8 @@
     "load-grunt-tasks": "0.6.0"
   },
   "scripts": {
+    "postinstall": "./node_modules/.bin/bower install",
     "test": "./node_modules/.bin/grunt test",
-    "postinstall": "./node_modules/.bin/bower install"
+    "posttest": "./node_modules/.bin/grunt coverage"
   }
 }

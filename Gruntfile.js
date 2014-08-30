@@ -48,8 +48,16 @@ module.exports = function(grunt) {
         watch: {
             files: ['<%= jshint.files %>'],
             tasks: ['jshint', 'karma']
+        },
+        coveralls: {
+            options: {
+                debug: true,
+                coverage_dir: 'coverage'
+            }
         }
     });
+
+    grunt.registerTask('coverage', ['coveralls']);
 
     grunt.registerTask('test', ['jshint', 'karma']);
 
