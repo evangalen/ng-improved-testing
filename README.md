@@ -1,4 +1,4 @@
-# ngImprovedTesting &nbsp;[![Travis build status](https://travis-ci.org/evangalen/ng-improved-testing.png?branch=master)](https://travis-ci.org/evangalen/ng-improved-testing)
+# ngImprovedTesting &nbsp;[![Travis build status](https://travis-ci.org/evangalen/ng-improved-testing.png?branch=master)](https://travis-ci.org/evangalen/ng-improved-testing)&nbsp;[![Bower version](https://badge.fury.io/bo/ng-improved-testing.svg)](http://badge.fury.io/bo/ng-improved-testing)
 
 Improves AngularJS testing
 
