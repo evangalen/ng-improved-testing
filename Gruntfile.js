@@ -26,17 +26,33 @@ module.exports = function(grunt) {
             }
         },
         karma: {
+            options: {
+                singleRun: true,
+                reporters: ['dots', 'coverage'],
+                preprocessors: {
+                    'src/**/*.js': ['coverage']
+                }
+            },
             angular_1_0: {
                 configFile: 'karma-angular-1.0.conf.js',
-                singleRun: true
+                coverageReporter: {
+                    type: 'lcov',
+                    dir: 'coverage/angular-1.0'
+                }
             },
             angular_1_2: {
                 configFile: 'karma-angular-1.2.conf.js',
-                singleRun: true
+                coverageReporter: {
+                    type: 'lcov',
+                    dir: 'coverage/angular-1.2'
+                }
             },
             angular_1_3_nightly: {
                 configFile: 'karma-angular-1.3-nightly.conf.js',
-                singleRun: true
+                coverageReporter: {
+                    type: 'lcov',
+                    dir: 'coverage/angular-1.3-nightly'
+                }
             }
         },
         jshint: {
@@ -50,14 +66,13 @@ module.exports = function(grunt) {
             tasks: ['jshint', 'karma']
         },
         coveralls: {
-            options: {
-                debug: true,
-                coverage_dir: 'coverage'
+            'upload-combined-coverage': {
+                src: 'coverage/combined-lcov.info'
             }
         }
     });
 
-    grunt.registerTask('coverage', ['coveralls']);
+    grunt.registerTask('upload-combined-coverage', ['coveralls:upload-combined-coverage']);
 
     grunt.registerTask('test', ['jshint', 'karma']);
 

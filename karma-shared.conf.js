@@ -37,18 +37,6 @@ module.exports = function (config) {
 
         // Continuous Integration mode
         // if true, it capture browsers, run tests and exit
-        singleRun: false,
-
-        preprocessors: {
-            'src/**/*.js': ['coverage']
-        },
-
-        reporters: ['progress', 'coverage'],
-
-        coverageReporter: {
-            type: 'lcov',
-            dir: 'coverage/'
-        }
-
+        singleRun: false
     });
 };

@@ -9,18 +9,18 @@
     "grunt-contrib-jshint": "0.10.0",
     "grunt-contrib-uglify": "0.5.1",
     "grunt-contrib-watch": "0.6.1",
+    "grunt-coveralls": "1.0.0",
     "grunt-karma": "0.8.3",
-    "grunt-karma-coveralls": "2.5.1",
     "grunt-ng-annotate": "0.3.2",
     "karma-coverage": "0.2.6",
     "karma-jasmine": "0.1.5",
     "karma-phantomjs-launcher": "0.1.4",
     "karma-script-launcher": "0.1.0",
+    "lcov-result-merger": "1.0.0",
     "load-grunt-tasks": "0.6.0"
   },
   "scripts": {
     "postinstall": "./node_modules/.bin/bower install",
-    "test": "./node_modules/.bin/grunt test",
-    "posttest": "./node_modules/.bin/grunt coverage"
+    "test": "./node_modules/.bin/grunt test"
   }
 }

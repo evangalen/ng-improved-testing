@@ -9,4 +9,5 @@ script:
   - npm test
 
 after_success:
-  - npm posttest
+  - ./node_modules/.bin/lcov-result-merger 'coverage/angular-*/**/lcov.info' coverage/combined-lcov.info
+  - ./node_modules/.bin/grunt upload-combined-coverage
