@@ -66,13 +66,13 @@ module.exports = function(grunt) {
             tasks: ['jshint', 'karma']
         },
         coveralls: {
-            'upload-combined-coverage': {
+            'combined-lcov-info': {
                 src: 'coverage/combined-lcov.info'
             }
         }
     });
 
-    grunt.registerTask('upload-combined-coverage', ['coveralls:upload-combined-coverage']);
+    grunt.registerTask('upload-combined-coverage', ['coveralls:combined-lcov-info']);
 
     grunt.registerTask('test', ['jshint', 'karma']);
 
