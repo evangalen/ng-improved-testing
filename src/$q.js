@@ -9,7 +9,8 @@ var original$QProviderConstructor = moduleIntrospector.getProviderDeclaration('$
 var ngInjector = angular.injector(['ng']);
 var original$QProviderInstance = ngInjector.instantiate(original$QProviderConstructor, {});
 
-angular.module('ngImprovedTesting.$q', [])
+
+angular.module('ngImprovedTesting.$q', ['ngImprovedTesting.internal.config'])
 
     /**
      * @ngdoc service
@@ -18,34 +19,41 @@ angular.module('ngImprovedTesting.$q', [])
      * @description
      * TODO: add description
      */
-    .provider('$q', {
-        $get: ['$exceptionHandler', function($exceptionHandler) {
-            /** @type {Array.<function()>} */
-            var executeOnNextTick = [];
+    .provider('$q', ['ngImprovedTestingConfig', function(ngImprovedTestingConfig) {
+        this.$get = ['$rootScope', '$exceptionHandler', function($rootScope, $exceptionHandler) {
+            /** @type {?Array.<function()>} */
+            var executeOnNextTick = null;
 
-            var $rootScope = {
-                $evalAsync: function(callback) {
-                    executeOnNextTick.push(callback);
-                }
-            };
+            if (ngImprovedTestingConfig.$qTick) {
+                executeOnNextTick = [];
 
-            var result = original$QProviderInstance.$get($rootScope, $exceptionHandler);
+                $rootScope = {
+                    $evalAsync: function (callback) {
+                        executeOnNextTick.push(callback);
+                    }
+                };
+            }
 
-            /**
-             * @ngdoc method
-             * @name $q#tick
-             * @description
-             * TODO: add description
-             */
-            result.tick = function() {
-                angular.forEach(executeOnNextTick, function(callback) {
-                    callback();
-                });
-                executeOnNextTick.length = 0;
-            };
+            var result = original$QProviderInstance.$get[original$QProviderInstance.$get.length - 1](
+                    $rootScope, $exceptionHandler);
+
+            if (ngImprovedTestingConfig.$qTick) {
+                /**
+                 * @ngdoc method
+                 * @name $q#tick
+                 * @description
+                 * TODO: add description
+                 */
+                result.tick = function () {
+                    angular.forEach(executeOnNextTick, function (callback) {
+                        callback();
+                    });
+                    executeOnNextTick.length = 0;
+                };
+            }
 
             return result;
-        }]
-    });
+        }];
+    }]);
 
 }());

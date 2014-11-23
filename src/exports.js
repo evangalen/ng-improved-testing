@@ -2,8 +2,13 @@
 'use strict';
 
 var injector = angular.injector([
-        'ng', 'ngImprovedTesting.internal.mockCreator', 'ngImprovedTesting.internal.moduleBuilder'
+        'ng',
+        'ngImprovedTesting.internal.config',
+        'ngImprovedTesting.internal.mockCreator',
+        'ngImprovedTesting.internal.moduleBuilder'
     ]);
+
+window.ngImprovedTestingConfig = injector.get('ngImprovedTestingConfig');
 
 var mockCreator = injector.get('mockCreator');
 window.mockInstance = mockCreator.mockInstance;
