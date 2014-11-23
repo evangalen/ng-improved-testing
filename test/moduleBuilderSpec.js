@@ -109,7 +109,7 @@ describe('moduleBuilder service', function() {
         var ngModuleIntrospectorInjector = angular.injector(['ngModuleIntrospector']);
         var originalModuleIntrospector = ngModuleIntrospectorInjector.get('moduleIntrospector');
 
-        var ngImprovedTestingInjector = angular.injector(['ngImprovedTesting', function($provide) {
+        var ngImprovedTestingInjector = angular.injector(['ngImprovedTesting.internal.moduleBuilder', function($provide) {
             var spiedModuleIntrospector = jasmine.createSpy().andCallFake(function() {
                 var result = originalModuleIntrospector.apply(this, arguments);
 
