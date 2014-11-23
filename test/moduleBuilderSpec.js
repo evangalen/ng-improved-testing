@@ -344,7 +344,7 @@ describe('moduleBuilder service', function() {
                         .build();
 
                     inject(function(aServiceService) {
-                        assertMockableDepenciesWereMocked(aServiceFactoryFactory, false, true);
+                        assertMockableDepenciesWereMocked(AServiceConstructor, false, true);
                         expect(aServiceService instanceof AServiceConstructor).toBe(true);
                     });
                 });
@@ -421,7 +421,7 @@ describe('moduleBuilder service', function() {
                         .build();
 
                     inject(function(aServiceService) {
-                        assertMockableDepenciesWereMocked(aServiceFactoryFactory, false, true);
+                        assertMockableDepenciesWereMocked(AServiceConstructor, false, true);
                         expect(aServiceService instanceof AServiceConstructor).toBe(true);
                     });
                 });
