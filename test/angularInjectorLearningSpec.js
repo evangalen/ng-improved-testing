@@ -1,6 +1,6 @@
-describe('$injector service', function() {
-    'use strict';
+'use strict';
 
+describe('$injector service', function() {
     /** @const */
     var filter = function(text) {
         return text + '!';
@@ -88,7 +88,7 @@ describe('$injector service', function() {
 
             var invocationIndex = -1;
 
-            for (var i = 0; i < $provide.factory.calls.length; i++) {
+            for (var i = 0; i < $provide.factory.calls.length; i += 1) {
                 if ($provide.factory.calls[i].args[0] === 'aDirectiveDirective') {
                     expect(invocationIndex).toBe(-1);
 
@@ -112,7 +112,7 @@ describe('$injector service', function() {
 
             //TODO: instead of this solution let the others specs 'register' its "expected" factory invocations
             //  and then check in the "afterEach" that only these factory invocations has been made
-            for (var i = 0; i < $provide.factory.calls.length; i++) {
+            for (var i = 0; i < $provide.factory.calls.length; i += 1) {
                 expect($provide.factory.calls[i].args[0].indexOf('aController')).toBe(-1);
             }
         });

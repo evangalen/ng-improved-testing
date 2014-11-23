@@ -1,4 +1,3 @@
-(function() {
 'use strict';
 
 /**
@@ -119,5 +118,3 @@ function MockCreator() {
 
 angular.module('ngImprovedTesting.internal.mockCreator', [])
     .service('mockCreator', MockCreator);
-
-}());

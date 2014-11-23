@@ -1,4 +1,3 @@
-;(function() {
 'use strict';
 
 var numberOfBuildModules = 0;
@@ -432,5 +431,3 @@ angular.module('ngImprovedTesting.internal.moduleBuilder', [
         'ngImprovedTesting.internal.mockCreator'
      ])
     .factory('moduleBuilder', moduleIntrospectorFactory);
-
-}());

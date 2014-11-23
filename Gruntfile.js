@@ -1,17 +1,33 @@
+var fs = require('fs');
+
 module.exports = function(grunt) {
     //grunt plugins
     require('load-grunt-tasks')(grunt);
 
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
+        concat: {
+            singleGlobalUseStrict: {
+                options: {
+                    // Replace all 'use strict' statements in the code with a single one at the top
+                    banner: fs.readFileSync('src/module.prefix', 'utf8'),
+                    process: function(src) {
+                        return src.replace(/(^|\n)[ \t]*('use strict'|"use strict");?\s*/g, '$1');
+                    },
+                    footer: fs.readFileSync('src/module.suffix', 'utf8')
+                },
+                files: {
+                    'dist/<%= pkg.name %>-nonAnnotated.js': ['src/module.js', 'src/*.js']
+                }
+            }
+        },
         ngAnnotate: {
             options: {
                 ngAnnotateOptions: {}
             },
             default: {
                 files: {
-                    'dist/<%= pkg.name %>.js':
-                        ['src/module.js', 'src/mockCreator.js', 'src/moduleBuilder.js', 'src/exports.js']
+                    'dist/<%= pkg.name %>.js': ['dist/<%= pkg.name %>-nonAnnotated.js']
                 }
             }
         },
@@ -69,5 +85,5 @@ module.exports = function(grunt) {
 
     grunt.registerTask('test', ['jshint', 'karma']);
 
-    grunt.registerTask('default', ['jshint', 'karma', 'ngAnnotate', 'uglify']);
+    grunt.registerTask('default', ['jshint', 'karma', 'concat:singleGlobalUseStrict', 'ngAnnotate', 'uglify']);
 };

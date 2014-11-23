@@ -1,5 +1,6 @@
+'use strict';
+
 describe('mockCreator service', function() {
-    'use strict';
 
     beforeEach(module('ngImprovedTesting.internal.mockCreator'));
 

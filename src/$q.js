@@ -1,4 +1,3 @@
-;(function() {
 'use strict';
 
 var ngModuleIntrospectorInjector = angular.injector(['ng', 'ngModuleIntrospector']);
@@ -19,8 +18,8 @@ angular.module('ngImprovedTesting.$q', ['ngImprovedTesting.internal.config'])
      * @description
      * TODO: add description
      */
-    .provider('$q', ['ngImprovedTestingConfig', function(ngImprovedTestingConfig) {
-        this.$get = ['$rootScope', '$exceptionHandler', function($rootScope, $exceptionHandler) {
+    .provider('$q', function(ngImprovedTestingConfig) {
+        this.$get = function($rootScope, $exceptionHandler) {
             /** @type {?Array.<function()>} */
             var executeOnNextTick = null;
 
@@ -53,7 +52,5 @@ angular.module('ngImprovedTesting.$q', ['ngImprovedTesting.internal.config'])
             }
 
             return result;
-        }];
-    }]);
-
-}());
+        };
+    });

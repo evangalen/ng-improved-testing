@@ -1,6 +1,5 @@
 {
-    //TODO: decide to either remove this rule or modify the code accordingly
-//    "plusplus": true,
+    "plusplus": true,
     "nonew": true,
     "curly": true,
     "latedef": true,
@@ -36,12 +35,6 @@
         "spyOn": false,
         "jasmine": false,
         "expect": false,
-        "window": false,
-
-        // TODO: remove once the last "xit" has been replaced with an "it"
-        "xit": false,
-
-        // TODO: remove once the last "xdescribe" has been replaced with an "describe"
-        "xdescribe": false
+        "window": false
     }
 }

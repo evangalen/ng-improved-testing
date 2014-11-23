@@ -7,8 +7,7 @@
     "unused": true,
     "noarg": true,
     "trailing": true,
-    //TODO: remove once "module.prefix" + "module.suffix" is used
-//    "indent": 4,
+    "indent": 4,
     "forin":true,
     "noempty": true,
     "quotmark": "single",

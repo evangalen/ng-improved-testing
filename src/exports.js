@@ -1,4 +1,3 @@
-(function(window) {
 'use strict';
 
 var injector = angular.injector([
@@ -14,4 +13,3 @@ var mockCreator = injector.get('mockCreator');
 window.mockInstance = mockCreator.mockInstance;
 
 window.ModuleBuilder = injector.get('moduleBuilder');
-}(window));

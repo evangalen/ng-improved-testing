@@ -1,4 +1,3 @@
-;(function() {
 'use strict';
 
 var ngImprovedTestingConfig = {
@@ -7,5 +6,3 @@ var ngImprovedTestingConfig = {
 
 angular.module('ngImprovedTesting.internal.config', [])
     .constant('ngImprovedTestingConfig', ngImprovedTestingConfig);
-
-}());

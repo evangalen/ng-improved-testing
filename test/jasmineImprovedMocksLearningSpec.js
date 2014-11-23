@@ -1,5 +1,6 @@
+'use strict';
+
 describe('jasmine improved mocks learning', function() {
-    'use strict';
 
     it('how to shadow an object literal with a mock object', function() {
         var toBeMockedObjectLiteral = {

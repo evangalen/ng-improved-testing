@@ -1,5 +1,6 @@
+'use strict';
+
 describe('moduleBuilder service', function() {
-    'use strict';
 
     /** @const */
     var angular1_0 = angular.version.full.indexOf('1.0.') === 0;

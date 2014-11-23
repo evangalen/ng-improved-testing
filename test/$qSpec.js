@@ -1,5 +1,6 @@
+'use strict';
+
 describe('$q service', function() {
-    'use strict';
 
     beforeEach(module('ngImprovedTesting.$q'));
 
