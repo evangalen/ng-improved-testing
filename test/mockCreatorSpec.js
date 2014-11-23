@@ -227,30 +227,73 @@ describe('mockCreator service', function() {
             });
 
             it('should also contains all inherited properties with a jasmine spy for each method', function() {
+                var anInheritedMethodInvoked = false;
+                var anInheritedMethod = function() {
+                    anInheritedMethodInvoked = true;
+                };
+
+                var aPrototypeMethodInvoked = false;
+                var aPrototypeMethod = function() {
+                    aPrototypeMethodInvoked = true;
+                };
+
+                var aConstructorMethodInvoked = false;
+                var aConstructorMethod = function() {
+                    aConstructorMethodInvoked = true;
+                };
+
                 var ParentConstructor = function() {};
                 ParentConstructor.aStaticMethodOfParent = function() {};
                 ParentConstructor.prototype.anInheritedConstant = 'anInheritedValue';
-                ParentConstructor.prototype.anInheritedMethod = function() {};
+                ParentConstructor.prototype.anInheritedMethod = anInheritedMethod;
 
-                var Constructor = function() {};
+                var Constructor = function() {
+                    this.aConstructorMethod = aConstructorMethod;
+                };
                 Constructor.aStaticMethod = function() {};
                 Constructor.prototype = Object.create(ParentConstructor.prototype);
                 Constructor.prototype.constructor = Constructor;
-                Constructor.prototype.anInstanceMethod = function() {};
+                Constructor.prototype.aPrototypeMethod = aPrototypeMethod;
                 Constructor.prototype.aPrototypeConstant = 'aPrototypeConstant';
 
-                var result = mockCreator.mockInstance(new Constructor());
+                var instance = new Constructor();
+
+                var result = mockCreator.mockInstance(instance);
 
                 expect(Object.getOwnPropertyNames(result))
-                    .toEqual(['anInstanceMethod', 'aPrototypeConstant', 'anInheritedConstant', 'anInheritedMethod']);
+                    .toEqual(['aConstructorMethod', 'aPrototypeConstant', 'anInheritedConstant']);
 
-                expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
+                expect(Object.getPrototypeOf(Object.getPrototypeOf(result))).toBe(instance);
                 expect(result.anInheritedConstant).toBe(ParentConstructor.prototype.anInheritedConstant);
                 expect(result.aPrototypeConstant).toBe(Constructor.prototype.aPrototypeConstant);
-
-                expect(createdSpies.length).toBe(2);
-                expect(createdSpies[0]).toBe(result.anInstanceMethod);
+                expect(createdSpies.length).toBe(3);
+                expect(createdSpies[0]).toBe(result.aPrototypeMethod);
                 expect(createdSpies[1]).toBe(result.anInheritedMethod);
+                expect(createdSpies[2]).toBe(result.aConstructorMethod);
+
+
+                expect(result instanceof Constructor);
+
+
+                result.aPrototypeMethod();
+                result.anInheritedMethod();
+                result.aConstructorMethod();
+
+                expect(aPrototypeMethodInvoked).toBe(false);
+                expect(anInheritedMethodInvoked).toBe(false);
+                expect(aConstructorMethodInvoked).toBe(false);
+
+                result.aPrototypeMethod.andCallThrough();
+                result.anInheritedMethod.andCallThrough();
+                result.aConstructorMethod.andCallThrough();
+
+                result.aPrototypeMethod();
+                result.anInheritedMethod();
+                result.aConstructorMethod();
+
+                expect(aPrototypeMethodInvoked).toBe(true);
+                expect(anInheritedMethodInvoked).toBe(true);
+                expect(aConstructorMethodInvoked).toBe(true);
             });
 
         });

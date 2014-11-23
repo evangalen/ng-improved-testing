@@ -6,28 +6,6 @@
  */
 function MockCreator() {
 
-    /**
-     * @param {*} value
-     * @returns {boolean}
-     */
-    this.canInstanceBeMocked = function (value) {
-        return angular.isFunction(value) || isObjectWithMethods(value);
-    };
-
-    /**
-     * @param {(Function|Object)} value
-     * @returns {(Function|Object)}
-     */
-    this.mockInstance = function (value) {
-        if (angular.isFunction(value)) {
-            return createFunctionMock(value);
-        } else if (isObjectWithMethods(value)) {
-            return createObjectMock(value);
-        } else {
-            throw 'Could not mock provided value: ' + value;
-        }
-    };
-
     function isObjectWithMethods(value) {
         if (!angular.isObject(value)) {
             return false;
@@ -37,7 +15,7 @@ function MockCreator() {
             var propertyValue = value[propertyName];
 
             if (angular.isFunction(propertyValue) && propertyName !== 'constructor' &&
-                    propertyValue !== Object.prototype[propertyName]) {
+                propertyValue !== Object.prototype[propertyName]) {
                 return true;
             }
         }
@@ -72,7 +50,7 @@ function MockCreator() {
     function hasProperties(obj, ignoreProperties) {
         for (var propertyName in obj) {
             if (obj.hasOwnProperty(propertyName) &&
-                    (!ignoreProperties || ignoreProperties.indexOf(propertyName) === -1)) {
+                (!ignoreProperties || ignoreProperties.indexOf(propertyName) === -1)) {
                 return true;
             }
         }
@@ -80,12 +58,40 @@ function MockCreator() {
         return false;
     }
 
+    function objectCreate(proto) {
+        function F() {}
+        F.prototype = proto;
+        return new F();
+    }
+
     function createObjectMock(obj) {
-        var result = {};
+        /** @constructor */
+        function Mock() {
+            var self = this;
 
-        copyPropertiesAndReplaceWithSpies(obj, result, false, 'constructor');
+            for (var propertyName in obj) {
+                var propertyValue = obj[propertyName]; //jshint forin:false
 
-        return result;
+                if (!angular.isFunction(propertyValue)) {
+                    self[propertyName] = angular.copy(propertyValue);
+                } else if (obj.hasOwnProperty(propertyName)) {
+                    spyOn(self, propertyName);
+                }
+            }
+        }
+
+        Mock.prototype = objectCreate(obj);
+        Mock.prototype.constructor = Mock;
+
+        for (var propertyName in obj) {
+            var propertyValue = obj[propertyName]; //jshint forin:false
+            if (angular.isFunction(propertyValue) && !obj.hasOwnProperty(propertyName) &&
+                    propertyName !== 'constructor') {
+                spyOn(Mock.prototype, propertyName);
+            }
+        }
+
+        return new Mock();
     }
 
     /**
@@ -105,7 +111,7 @@ function MockCreator() {
             var propertyValue = source[propertyName];
 
             if ((onlyOwnProperties || (!onlyOwnProperties && propertyValue !== Object.prototype[propertyName])) &&
-                    (!ignoreProperties || ignoreProperties.indexOf(propertyName) === -1)) {
+                (!ignoreProperties || ignoreProperties.indexOf(propertyName) === -1)) {
                 if (angular.isFunction(propertyValue)) {
                     target[propertyName] = jasmine.createSpy(propertyName);
                 } else {
@@ -114,6 +120,30 @@ function MockCreator() {
             }
         }
     }
+
+
+    /**
+     * @param {*} value
+     * @returns {boolean}
+     */
+    this.canInstanceBeMocked = function (value) {
+        return angular.isFunction(value) || isObjectWithMethods(value);
+    };
+
+    /**
+     * @param {(Function|Object)} value
+     * @returns {(Function|Object)}
+     */
+    this.mockInstance = function (value) {
+        if (angular.isFunction(value)) {
+            return createFunctionMock(value);
+        } else if (isObjectWithMethods(value)) {
+            return createObjectMock(value);
+        } else {
+            throw 'Could not mock provided value: ' + value;
+        }
+    };
+
 }
 
 angular.module('ngImprovedTesting.internal.mockCreator', [])
