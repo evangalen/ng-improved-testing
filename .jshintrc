@@ -18,6 +18,6 @@
     "immed": true,
     "maxcomplexity": 10,
     "nonbsp": true,
-    "maxlen": 120,
+    "maxlen": 140,
     "freeze": true
 }

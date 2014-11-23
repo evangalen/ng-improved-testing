@@ -22,7 +22,7 @@
     "es3": true,
     "maxcomplexity": 10,
     "nonbsp": true,
-    "maxlen": 120,
+    "maxlen": 140,
     "freeze": true,
     "globalstrict" :true,
     "globals": {
