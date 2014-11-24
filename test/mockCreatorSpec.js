@@ -237,9 +237,9 @@ describe('mockCreator service', function() {
                     aPrototypeMethodInvoked = true;
                 };
 
-                var aConstructorMethodInvoked = false;
-                var aConstructorMethod = function() {
-                    aConstructorMethodInvoked = true;
+                var anInstanceMethodInvoked = false;
+                var anInstanceMethod = function() {
+                    anInstanceMethodInvoked = true;
                 };
 
                 var ParentConstructor = function() {};
@@ -248,7 +248,8 @@ describe('mockCreator service', function() {
                 ParentConstructor.prototype.anInheritedMethod = anInheritedMethod;
 
                 var Constructor = function() {
-                    this.aConstructorMethod = aConstructorMethod;
+                    this.anInstanceMethod = anInstanceMethod;
+                    this.anInstanceConstant = 'anInstanceConstant';
                 };
                 Constructor.aStaticMethod = function() {};
                 Constructor.prototype = Object.create(ParentConstructor.prototype);
@@ -260,8 +261,9 @@ describe('mockCreator service', function() {
 
                 var result = mockCreator.mockInstance(instance);
 
-                expect(Object.getOwnPropertyNames(result))
-                    .toEqual(['aConstructorMethod', 'aPrototypeConstant', 'anInheritedConstant']);
+                expect(Object.getOwnPropertyNames(result)).toEqual(['anInstanceMethod', 'anInstanceConstant']);
+                expect(Object.getOwnPropertyNames(Object.getPrototypeOf(result))).toEqual(['constructor',
+                        'aPrototypeMethod', 'aPrototypeConstant', 'anInheritedConstant', 'anInheritedMethod']);
 
                 expect(Object.getPrototypeOf(Object.getPrototypeOf(result))).toBe(instance);
                 expect(result.anInheritedConstant).toBe(ParentConstructor.prototype.anInheritedConstant);
@@ -269,7 +271,7 @@ describe('mockCreator service', function() {
                 expect(createdSpies.length).toBe(3);
                 expect(createdSpies[0]).toBe(result.aPrototypeMethod);
                 expect(createdSpies[1]).toBe(result.anInheritedMethod);
-                expect(createdSpies[2]).toBe(result.aConstructorMethod);
+                expect(createdSpies[2]).toBe(result.anInstanceMethod);
 
 
                 expect(result instanceof Constructor);
@@ -277,23 +279,23 @@ describe('mockCreator service', function() {
 
                 result.aPrototypeMethod();
                 result.anInheritedMethod();
-                result.aConstructorMethod();
+                result.anInstanceMethod();
 
                 expect(aPrototypeMethodInvoked).toBe(false);
                 expect(anInheritedMethodInvoked).toBe(false);
-                expect(aConstructorMethodInvoked).toBe(false);
+                expect(anInstanceMethodInvoked).toBe(false);
 
                 result.aPrototypeMethod.andCallThrough();
                 result.anInheritedMethod.andCallThrough();
-                result.aConstructorMethod.andCallThrough();
+                result.anInstanceMethod.andCallThrough();
 
                 result.aPrototypeMethod();
                 result.anInheritedMethod();
-                result.aConstructorMethod();
+                result.anInstanceMethod();
 
                 expect(aPrototypeMethodInvoked).toBe(true);
                 expect(anInheritedMethodInvoked).toBe(true);
-                expect(aConstructorMethodInvoked).toBe(true);
+                expect(anInstanceMethodInvoked).toBe(true);
             });
 
         });

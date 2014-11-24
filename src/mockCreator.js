@@ -70,12 +70,14 @@ function MockCreator() {
             var self = this;
 
             for (var propertyName in obj) {
-                var propertyValue = obj[propertyName]; //jshint forin:false
+                if (obj.hasOwnProperty(propertyName)) {
+                    var propertyValue = obj[propertyName];
 
-                if (!angular.isFunction(propertyValue)) {
-                    self[propertyName] = angular.copy(propertyValue);
-                } else if (obj.hasOwnProperty(propertyName)) {
-                    spyOn(self, propertyName);
+                    if (!angular.isFunction(propertyValue)) {
+                        self[propertyName] = angular.copy(propertyValue);
+                    } else {
+                        spyOn(self, propertyName);
+                    }
                 }
             }
         }
@@ -84,10 +86,13 @@ function MockCreator() {
         Mock.prototype.constructor = Mock;
 
         for (var propertyName in obj) {
-            var propertyValue = obj[propertyName]; //jshint forin:false
-            if (angular.isFunction(propertyValue) && !obj.hasOwnProperty(propertyName) &&
-                    propertyName !== 'constructor') {
-                spyOn(Mock.prototype, propertyName);
+            if (!obj.hasOwnProperty(propertyName) && propertyName !== 'constructor') {
+                var propertyValue = obj[propertyName]; //jshint forin:false
+                if (angular.isFunction(propertyValue)) {
+                    spyOn(Mock.prototype, propertyName);
+                } else {
+                    Mock.prototype[propertyName] = angular.copy(propertyValue);
+                }
             }
         }
 
