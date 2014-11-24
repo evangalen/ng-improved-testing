@@ -262,8 +262,8 @@ describe('mockCreator service', function() {
                 var result = mockCreator.mockInstance(instance);
 
                 expect(Object.getOwnPropertyNames(result)).toEqual(['anInstanceMethod', 'anInstanceConstant']);
-                expect(Object.getOwnPropertyNames(Object.getPrototypeOf(result))).toEqual(['constructor',
-                        'aPrototypeMethod', 'aPrototypeConstant', 'anInheritedConstant', 'anInheritedMethod']);
+                expect(Object.getOwnPropertyNames(Object.getPrototypeOf(result)))
+                    .toEqual(['constructor', 'aPrototypeMethod', 'anInheritedMethod']);
 
                 expect(Object.getPrototypeOf(Object.getPrototypeOf(result))).toBe(instance);
                 expect(result.anInheritedConstant).toBe(ParentConstructor.prototype.anInheritedConstant);
