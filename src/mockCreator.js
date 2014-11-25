@@ -37,7 +37,7 @@ function MockCreator() {
 
         copyPropertiesAndReplaceWithSpies(value, Constructor, true);
 
-        Constructor.prototype = Object.create(value.prototype);
+        Constructor.prototype = createObject(value.prototype);
         copyPropertiesAndReplaceWithSpies(value.prototype, Constructor.prototype, true, 'constructor');
         Constructor.prototype.constructor = value.prototype.constructor;
 
@@ -75,8 +75,12 @@ function MockCreator() {
             });
         }
 
-        Mock.prototype = Object.create(obj);
-        Object.defineProperty(Mock.prototype, 'constructor', {value: Mock});
+        Mock.prototype = createObject(obj);
+        if (getPrototypeOfMethodExists) {
+            Object.defineProperty(Mock.prototype, 'constructor', {value: Mock});
+        } else {
+            Mock.prototype.constructor = Mock;
+        }
 
         iteratePropertiesOnPrototypeChain(true, obj, function(currentProto, propertyName) {
             shadowMethod(currentProto, propertyName, Mock.prototype);
@@ -87,6 +91,16 @@ function MockCreator() {
         }
 
         return new Mock();
+    }
+
+    function createObject(proto) {
+        if (Object.create) {
+            return Object.create(proto);
+        } else {
+            var F = function() {};
+            F.prototype = proto;
+            return new F();
+        }
     }
 
     function shadowDataProperty(source, propertyName, target) {
