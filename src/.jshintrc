@@ -27,7 +27,6 @@
     "globals": {
         "angular": false,
         "window": false,
-        "jasmine": false,
-        "spyOn": false
+        "jasmine": false
     }
 }
