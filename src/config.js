@@ -1,7 +1,7 @@
 'use strict';
 
 var ngImprovedTestingConfig = {
-    $qTick: true
+    $qTick: false
 };
 
 angular.module('ngImprovedTesting.internal.config', [])

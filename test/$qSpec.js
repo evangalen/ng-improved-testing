@@ -13,9 +13,9 @@ describe('$q service', function() {
 
 
     describe('when window.ngImprovedTestingConfig.$qTick === true', function() {
-        beforeEach(function() {
-            expect(window.ngImprovedTestingConfig.$qTick).toBe(true);
-        });
+        beforeEach(inject(function (ngImprovedTestingConfig) {
+            ngImprovedTestingConfig.$qTick = true;
+        }));
 
 
         var $q;
@@ -62,9 +62,9 @@ describe('$q service', function() {
     });
 
     describe('when window.ngImprovedTestingConfig.$qTick === false', function() {
-        beforeEach(function () {
-            window.ngImprovedTestingConfig.$qTick = false;
-        });
+        beforeEach(inject(function (ngImprovedTestingConfig) {
+            ngImprovedTestingConfig.$qTick = false;
+        }));
 
 
         var $q;
