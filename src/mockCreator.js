@@ -76,6 +76,7 @@ function MockCreator() {
         }
 
         Mock.prototype = createObject(obj);
+
         if (getPrototypeOfMethodExists) {
             Object.defineProperty(Mock.prototype, 'constructor', {value: Mock});
         } else {
@@ -104,7 +105,7 @@ function MockCreator() {
     }
 
     function shadowDataProperty(source, propertyName, target) {
-        assureOwnProperty(source, propertyName);
+        assureOwnPropertyExists(source, propertyName);
 
         if (getPrototypeOfMethodExists) {
             var propertyDescriptor = Object.getOwnPropertyDescriptor(source, propertyName);
@@ -116,7 +117,7 @@ function MockCreator() {
     }
 
     function shadowMethod(source, propertyName, target) {
-        assureOwnProperty(source, propertyName);
+        assureOwnPropertyExists(source, propertyName);
 
         spyOn(target, propertyName);
 
@@ -128,7 +129,7 @@ function MockCreator() {
         }
     }
 
-    function assureOwnProperty(obj, propertyName) {
+    function assureOwnPropertyExists(obj, propertyName) {
         if (!obj.hasOwnProperty(propertyName)) {
             throw 'Property name is not an own property: ' + propertyName;
         }
