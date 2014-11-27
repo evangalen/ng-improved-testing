@@ -1,8 +1,15 @@
 'use strict';
 
-var ngImprovedTestingConfig = {
+var ngImprovedTestingConfigDefaults = {
     $qTick: false
 };
 
+var ngImprovedTestingConfig = angular.extend({}, ngImprovedTestingConfigDefaults);
+
+
 angular.module('ngImprovedTesting.internal.config', [])
-    .constant('ngImprovedTestingConfig', ngImprovedTestingConfig);
+    .constant('ngImprovedTestingConfig', ngImprovedTestingConfig)
+
+    .run(function() {
+        angular.extend(ngImprovedTestingConfig, ngImprovedTestingConfigDefaults);
+    });
