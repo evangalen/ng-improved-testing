@@ -1,7 +1,8 @@
-describe('mockCreator service', function() {
-    'use strict';
+'use strict';
 
-    beforeEach(module('ngImprovedTesting'));
+describe('mockCreator service', function() {
+
+    beforeEach(module('ngImprovedTesting.internal.mockCreator'));
 
     var mockCreator;
 
@@ -11,16 +12,16 @@ describe('mockCreator service', function() {
 
 
 
-    describe('canBeMocked method', function() {
+    describe('canInstanceBeMocked method', function() {
 
         describe('should return true for', function() {
 
             it('a function', function() {
-                expect(mockCreator.canBeMocked(function() {})).toBe(true);
+                expect(mockCreator.canInstanceBeMocked(function() {})).toBe(true);
             });
 
             it('an object with at least one method', function() {
-                expect(mockCreator.canBeMocked({aMethod: function() {}})).toBe(true);
+                expect(mockCreator.canInstanceBeMocked({aMethod: function() {}})).toBe(true);
             });
 
             it('an object with an inherited property', function() {
@@ -32,7 +33,7 @@ describe('mockCreator service', function() {
                 Constructor.prototype.constructor = Constructor;
                 Constructor.prototype.anInstanceMethod = function() {};
 
-                expect(mockCreator.canBeMocked(new Constructor())).toBe(true);
+                expect(mockCreator.canInstanceBeMocked(new Constructor())).toBe(true);
             });
         });
 
@@ -40,11 +41,11 @@ describe('mockCreator service', function() {
         describe('should return false for', function() {
 
             it('an object without any (enumerable) properties', function() {
-                expect(mockCreator.canBeMocked({})).toBe(false);
+                expect(mockCreator.canInstanceBeMocked({})).toBe(false);
             });
 
             it('an object with properties but no methods', function() {
-                expect(mockCreator.canBeMocked({aProperty: 'aValue'})).toBe(false);
+                expect(mockCreator.canInstanceBeMocked({aProperty: 'aValue'})).toBe(false);
             });
 
             it('an object with inherited properties but no method', function() {
@@ -58,19 +59,19 @@ describe('mockCreator service', function() {
                 Constructor.prototype.constructor = Constructor;
                 Constructor.prototype.aPrototypeConstant = 'aPrototypeConstant';
 
-                expect(mockCreator.canBeMocked(new Constructor())).toBe(false);
+                expect(mockCreator.canInstanceBeMocked(new Constructor())).toBe(false);
             });
 
             it('anything other than a function or an object', function() {
-                expect(mockCreator.canBeMocked(undefined)).toBe(false);
-                expect(mockCreator.canBeMocked(null)).toBe(false);
-                expect(mockCreator.canBeMocked(NaN)).toBe(false);
-                expect(mockCreator.canBeMocked(Infinity)).toBe(false);
-                expect(mockCreator.canBeMocked(0)).toBe(false);
-                expect(mockCreator.canBeMocked(1)).toBe(false);
-                expect(mockCreator.canBeMocked(true)).toBe(false);
-                expect(mockCreator.canBeMocked(false)).toBe(false);
-                expect(mockCreator.canBeMocked([])).toBe(false);
+                expect(mockCreator.canInstanceBeMocked(undefined)).toBe(false);
+                expect(mockCreator.canInstanceBeMocked(null)).toBe(false);
+                expect(mockCreator.canInstanceBeMocked(NaN)).toBe(false);
+                expect(mockCreator.canInstanceBeMocked(Infinity)).toBe(false);
+                expect(mockCreator.canInstanceBeMocked(0)).toBe(false);
+                expect(mockCreator.canInstanceBeMocked(1)).toBe(false);
+                expect(mockCreator.canInstanceBeMocked(true)).toBe(false);
+                expect(mockCreator.canInstanceBeMocked(false)).toBe(false);
+                expect(mockCreator.canInstanceBeMocked([])).toBe(false);
             });
         });
 
@@ -78,7 +79,7 @@ describe('mockCreator service', function() {
 
 
 
-    describe('createMock method', function() {
+    describe('mockInstance method', function() {
 
         var originalJasmineCreateSpyFn = jasmine.createSpy;
         var createdSpies;
@@ -109,7 +110,7 @@ describe('mockCreator service', function() {
 
             describe('without any static methods or instance methods (on its prototype)', function() {
                 it('should return a new jasmine spy', function() {
-                    var result = mockCreator.createMock(function() {});
+                    var result = mockCreator.mockInstance(function() {});
 
                     expect(createdSpies.length).toBe(1);
                     expect(createdSpies[0]).toBe(result);
@@ -121,7 +122,7 @@ describe('mockCreator service', function() {
                     it('should return a new jasmine spy with jasmine spy for the static method', function() {
                         Constructor.aStaticMethod = function() {};
 
-                        var result = mockCreator.createMock(Constructor);
+                        var result = mockCreator.mockInstance(Constructor);
 
                         expect(createdSpies.length).toBe(2);
                         assertFirstCreatedSpyIsContructor(result);
@@ -135,7 +136,7 @@ describe('mockCreator service', function() {
                         Constructor.aStaticMethod = function() {};
                         Constructor.prototype.anInstanceMethod = function() {};
 
-                        var result = mockCreator.createMock(Constructor);
+                        var result = mockCreator.mockInstance(Constructor);
 
                         expect(createdSpies.length).toBe(3);
                         assertFirstCreatedSpyIsContructor(result);
@@ -149,7 +150,7 @@ describe('mockCreator service', function() {
                 it('should return a new jasmine spy with jasmine spy for the instance method', function() {
                     Constructor.prototype.anInstanceMethod = function() {};
 
-                    var result = mockCreator.createMock(Constructor);
+                    var result = mockCreator.mockInstance(Constructor);
 
                     expect(createdSpies.length).toBe(2);
                     assertFirstCreatedSpyIsContructor(result);
@@ -168,7 +169,7 @@ describe('mockCreator service', function() {
                 Constructor.prototype.constructor = Constructor;
                 Constructor.prototype.anInstanceMethod = function() {};
 
-                var SpyConstructor = mockCreator.createMock(Constructor);
+                var SpyConstructor = mockCreator.mockInstance(Constructor);
 
                 expect(createdSpies.length).toBe(3);
                 assertFirstCreatedSpyIsContructor(SpyConstructor);
@@ -204,21 +205,21 @@ describe('mockCreator service', function() {
 
 
             it('should consist of the same properties', function() {
-                var result = mockCreator.createMock(obj);
+                var result = mockCreator.mockInstance(obj);
 
                 expect(Object.getOwnPropertyNames(result))
                     .toEqual(['aConstant', 'anotherConstant', 'aMethod', 'anotherMethod']);
             });
 
             it('should have their non-methods properties copied', function() {
-                var result = mockCreator.createMock(obj);
+                var result = mockCreator.mockInstance(obj);
 
                 expect(result.aConstant).toBe(obj.aConstant);
                 expect(result.anotherConstant).toBe(obj.anotherConstant);
             });
 
             it('should have a new jasmine spy for each method', function() {
-                var result = mockCreator.createMock(obj);
+                var result = mockCreator.mockInstance(obj);
 
                 expect(createdSpies.length).toBe(2);
                 expect(createdSpies[0]).toBe(result.aMethod);
@@ -238,7 +239,7 @@ describe('mockCreator service', function() {
                 Constructor.prototype.anInstanceMethod = function() {};
                 Constructor.prototype.aPrototypeConstant = 'aPrototypeConstant';
 
-                var result = mockCreator.createMock(new Constructor());
+                var result = mockCreator.mockInstance(new Constructor());
 
                 expect(Object.getOwnPropertyNames(result))
                     .toEqual(['anInstanceMethod', 'aPrototypeConstant', 'anInheritedConstant', 'anInheritedMethod']);
@@ -284,7 +285,7 @@ describe('mockCreator service', function() {
 
             function doTestCreateMockThrowsException(value) {
                 expect(function() {
-                    mockCreator.createMock(value);
+                    mockCreator.mockInstance(value);
                 }).toThrow('Could not mock provided value: ' + value);
             }
         });

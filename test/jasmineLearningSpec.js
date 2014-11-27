@@ -1,5 +1,6 @@
+'use strict';
+
 describe('jasmine', function() {
-    'use strict';
 
     describe('spy', function() {
 

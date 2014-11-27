@@ -1,5 +1,10 @@
-describe('window.ModuleBuilder', function() {
-    'use strict';
+'use strict';
+
+describe('window', function() {
+
+    it('should contain a mockInstance method', function() {
+        expect(angular.isFunction(window.mockInstance)).toBe(true);
+    });
 
     it('should contain an exported "moduleBuilder" service', function() {
         expect(angular.isObject(window.ModuleBuilder)).toBe(true);

@@ -11,6 +11,8 @@ module.exports = function(config) {
             'bower_components/ng-module-introspector/ng-module-introspector.js',
             'bower_components/angular-mocks-1.2/angular-mocks.js',
             'src/module.js',
+            'src/config.js',
+            'src/$q.js',
             'src/mockCreator.js',
             'src/moduleBuilder.js',
             'src/exports.js',

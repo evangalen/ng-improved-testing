@@ -1,5 +1,6 @@
+'use strict';
+
 describe('moduleBuilder service', function() {
-    'use strict';
 
     /** @const */
     var angular1_0 = angular.version.full.indexOf('1.0.') === 0;
@@ -109,7 +110,7 @@ describe('moduleBuilder service', function() {
         var ngModuleIntrospectorInjector = angular.injector(['ngModuleIntrospector']);
         var originalModuleIntrospector = ngModuleIntrospectorInjector.get('moduleIntrospector');
 
-        var ngImprovedTestingInjector = angular.injector(['ngImprovedTesting', function($provide) {
+        var ngImprovedTestingInjector = angular.injector(['ngImprovedTesting.internal.moduleBuilder', function($provide) {
             var spiedModuleIntrospector = jasmine.createSpy().andCallFake(function() {
                 var result = originalModuleIntrospector.apply(this, arguments);
 
@@ -343,7 +344,7 @@ describe('moduleBuilder service', function() {
                         .build();
 
                     inject(function(aServiceService) {
-                        assertMockableDepenciesWereMocked(aServiceFactoryFactory, false, true);
+                        assertMockableDepenciesWereMocked(AServiceConstructor, false, true);
                         expect(aServiceService instanceof AServiceConstructor).toBe(true);
                     });
                 });
@@ -420,7 +421,7 @@ describe('moduleBuilder service', function() {
                         .build();
 
                     inject(function(aServiceService) {
-                        assertMockableDepenciesWereMocked(aServiceFactoryFactory, false, true);
+                        assertMockableDepenciesWereMocked(AServiceConstructor, false, true);
                         expect(aServiceService instanceof AServiceConstructor).toBe(true);
                     });
                 });

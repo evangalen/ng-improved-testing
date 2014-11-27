@@ -1,4 +1,3 @@
-(function() {
 'use strict';
 
 /**
@@ -11,7 +10,7 @@ function MockCreator() {
      * @param {*} value
      * @returns {boolean}
      */
-    this.canBeMocked = function (value) {
+    this.canInstanceBeMocked = function (value) {
         return angular.isFunction(value) || isObjectWithMethods(value);
     };
 
@@ -19,7 +18,7 @@ function MockCreator() {
      * @param {(Function|Object)} value
      * @returns {(Function|Object)}
      */
-    this.createMock = function (value) {
+    this.mockInstance = function (value) {
         if (angular.isFunction(value)) {
             return createFunctionMock(value);
         } else if (isObjectWithMethods(value)) {
@@ -117,7 +116,5 @@ function MockCreator() {
     }
 }
 
-angular.module('ngImprovedTesting')
+angular.module('ngImprovedTesting.internal.mockCreator', [])
     .service('mockCreator', MockCreator);
-
-}());
