@@ -10,11 +10,8 @@ Changes
   - AngularJS 1.0.x is no longer supported
   - no longer uses any internal AngularJS API (like 0.1.x did)
   - mocks can now also be manually created using the (global) `mockInstance(...)` method
-  - TODO: improved mocks so that:
-     - a mocked object is now "instanceof" compatible with its orginal object
-     - invoking ".andCallThrough()" on a mock method is now supported
-     - a mocked constructor returns a mock instance once instantiated
-  - TODO: when using a ModuleBuilder or using the "ngImprovedTesting" module the $q service is extended with "tick()" method
+  - when using a ModuleBuilder or using the "ngImprovedTesting" module the $q service is extended with "tick()" method
+  - TODO: add link to blog post about 0.2
 
 0.1.3
  - Fixes #3 (Internally created $injector doesn't include "ngMock")
