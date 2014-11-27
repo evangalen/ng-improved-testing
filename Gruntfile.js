@@ -17,7 +17,8 @@ module.exports = function(grunt) {
                     footer: fs.readFileSync('src/module.suffix', 'utf8')
                 },
                 files: {
-                    'dist/<%= pkg.name %>-nonAnnotated.js': ['src/module.js', 'src/*.js']
+                    'dist/<%= pkg.name %>-nonAnnotated.js': ['src/module.js', 'src/config.js', 'src/mockCreator.js',
+                            'src/moduleBuilder.js', 'src/$q.js', 'src/exports.js']
                 }
             }
         },
