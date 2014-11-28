@@ -2,6 +2,8 @@
 
 describe('moduleBuilder service', function() {
 
+    //TODO: add spec to test that "ngImprovedTesting" is added to the modules requires of the generated / created module
+
     /** @const */
     var angular1_0 = angular.version.full.indexOf('1.0.') === 0;
 
@@ -166,8 +168,7 @@ describe('moduleBuilder service', function() {
             moduleBuilder.forModule(originalModuleInstance.name);
 
             expect(createdInjector).toBeDefined();
-            expect(angular.injector)
-                .toHaveBeenCalledWith(['ng', 'ngMock', 'ngImprovedTesting', originalModuleInstance.name]);
+            expect(angular.injector).toHaveBeenCalledWith(['ng', 'ngMock', originalModuleInstance.name]);
         });
 
         it('should create a module introspector', function() {

@@ -44,7 +44,7 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
         /** @type {angular.Module} */
         var originalModule = angular.module(moduleName);
 
-        var injector = /** @type {$injector} */ angular.injector(['ng', 'ngMock', 'ngImprovedTesting', moduleName]);
+        var injector = /** @type {$injector} */ angular.injector(['ng', 'ngMock', moduleName]);
 
         var introspector = moduleIntrospector(moduleName);
 
@@ -377,7 +377,10 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
              */
             var declarations = {};
 
-            var buildModule = angular.module(buildModuleName, originalModule.requires);
+            var moduleRequires = originalModule.requires.slice(0);
+            moduleRequires.push('ngImprovedTesting');
+
+            var buildModule = angular.module(buildModuleName, moduleRequires);
 
             angular.forEach(toBeIncludedModuleComponents, function(toBeIncludedModuleComponent) {
                 if (toBeIncludedModuleComponent.componentKind === 'asIs') {
