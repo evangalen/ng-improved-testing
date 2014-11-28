@@ -2,16 +2,21 @@
 
 Improves AngularJS testing
 
-For more information about ngImprovedTesting read this blog [post](http://blog.jdriven.com/2014/07/ng-improved-testing-mock-testing-for-angularjs-made-easy/).
+For more information about:
+ - the mock testing support read this blog [post](http://blog.jdriven.com/2014/07/ng-improved-testing-mock-testing-for-angularjs-made-easy/).
+ - the added $q.tick() that improved testing promises read this blog
+[post](http://blog.jdriven.com/2014/11/ngimprovedtesting-0-2-adding-q-tick-to-improve-testing-promises/).
 
 Changes
 -------
+0.2.1
+ - Various changes to actually get $q.tick() working including enabling / disabling it
+
 0.2.0
   - AngularJS 1.0.x is no longer supported
   - no longer uses any internal AngularJS API (like 0.1.x did)
   - mocks can now also be manually created using the (global) `mockInstance(...)` method
   - when using a ModuleBuilder or using the "ngImprovedTesting" module the $q service is extended with "tick()" method
-  - TODO: add link to blog post about 0.2
 
 0.1.3
  - Fixes #3 (Internally created $injector doesn't include "ngMock")
