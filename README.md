@@ -4,7 +4,7 @@ Improves AngularJS testing
 
 For more information about:
  - the mock testing support read this blog [post](http://blog.jdriven.com/2014/07/ng-improved-testing-mock-testing-for-angularjs-made-easy/).
- - the added $q.tick() that improved testing promises read this blog
+ - using $q.tick() to improve testing promises read this blog
 [post](http://blog.jdriven.com/2014/11/ngimprovedtesting-0-2-adding-q-tick-to-improve-testing-promises/).
 
 Changes
