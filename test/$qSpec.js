@@ -1,4 +1,4 @@
-/*global ngImprovedTestingConfig:false */
+/*global ngImprovedTesting:false */
 'use strict';
 
 describe('$q service', function() {
@@ -13,11 +13,8 @@ describe('$q service', function() {
     }));
 
 
-    describe('when window.ngImprovedTestingConfig.$qTick === true', function() {
-        beforeEach(function () {
-            ngImprovedTestingConfig.$qTick = true;
-        });
-
+    describe('when $q.tick() is enabled', function() {
+        beforeEach(ngImprovedTesting.config.$qTickEnable());
 
         var $q;
 
@@ -62,12 +59,7 @@ describe('$q service', function() {
         });
     });
 
-    describe('when window.ngImprovedTestingConfig.$qTick === false', function() {
-        beforeEach(function () {
-            expect(ngImprovedTestingConfig.$qTick).toBe(false);
-        });
-
-
+    describe('when $q.tick() is not enabled', function() {
         var $q;
 
         beforeEach(inject(function(_$q_) {

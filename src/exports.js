@@ -7,9 +7,14 @@ var injector = angular.injector([
         'ngImprovedTesting.internal.moduleBuilder'
     ]);
 
-window.ngImprovedTestingConfig = injector.get('ngImprovedTestingConfig');
 
 var mockCreator = injector.get('mockCreator');
-window.mockInstance = mockCreator.mockInstance;
+
+window.ngImprovedTesting = {
+    mockInstance: mockCreator.mockInstance,
+    config: injector.get('ngImprovedTestingConfig')
+};
+
+window.mockInstance = window.ngImprovedTesting.mockInstance;
 
 window.ModuleBuilder = injector.get('moduleBuilder');

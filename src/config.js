@@ -1,15 +1,22 @@
+/* global afterEach:true */
 'use strict';
 
-var ngImprovedTestingConfigDefaults = {
+var ngImprovedTestingConfigFlags = {
     $qTick: false
 };
 
-var ngImprovedTestingConfig = angular.extend({}, ngImprovedTestingConfigDefaults);
+var ngImprovedTestingConfig = {
+    $qTickEnable: function() {
+        afterEach(function() {
+            ngImprovedTestingConfigFlags.$qTick = false;
+        });
 
+        return function() {
+            ngImprovedTestingConfigFlags.$qTick = true;
+        };
+    }
+};
 
 angular.module('ngImprovedTesting.internal.config', [])
-    .constant('ngImprovedTestingConfig', ngImprovedTestingConfig)
-
-    .run(function() {
-        angular.extend(ngImprovedTestingConfig, ngImprovedTestingConfigDefaults);
-    });
+    .constant('ngImprovedTestingConfigFlags', ngImprovedTestingConfigFlags)
+    .constant('ngImprovedTestingConfig', ngImprovedTestingConfig);

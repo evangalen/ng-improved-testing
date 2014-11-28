@@ -18,12 +18,12 @@ angular.module('ngImprovedTesting.$q', ['ngImprovedTesting.internal.config'])
      * @description
      * TODO: add description
      */
-    .provider('$q', function(ngImprovedTestingConfig) {
+    .provider('$q', function(ngImprovedTestingConfigFlags) {
         this.$get = function($rootScope, $exceptionHandler) {
             /** @type {?Array.<function()>} */
             var executeOnNextTick = null;
 
-            if (ngImprovedTestingConfig.$qTick) {
+            if (ngImprovedTestingConfigFlags.$qTick) {
                 executeOnNextTick = [];
 
                 $rootScope = {
@@ -36,7 +36,7 @@ angular.module('ngImprovedTesting.$q', ['ngImprovedTesting.internal.config'])
             var result = original$QProviderInstance.$get[original$QProviderInstance.$get.length - 1](
                     $rootScope, $exceptionHandler);
 
-            if (ngImprovedTestingConfig.$qTick) {
+            if (ngImprovedTestingConfigFlags.$qTick) {
                 /**
                  * @ngdoc method
                  * @name $q#tick
