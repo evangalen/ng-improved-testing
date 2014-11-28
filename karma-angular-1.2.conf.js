@@ -12,9 +12,9 @@ module.exports = function(config) {
             'bower_components/angular-mocks-1.2/angular-mocks.js',
             'src/module.js',
             'src/config.js',
-            'src/$q.js',
             'src/mockCreator.js',
             'src/moduleBuilder.js',
+            'src/$q.js',
             'src/exports.js',
             'bower_components/angular-animation-1.2/angular-animate.js',
             'test/**/*.js'

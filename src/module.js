@@ -1,3 +1,3 @@
 'use strict';
 
-angular.module('ngImprovedTesting', ['ngModuleIntrospector.$q']);
+angular.module('ngImprovedTesting', ['ngImprovedTesting.$q']);

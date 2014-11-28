@@ -44,7 +44,7 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
         /** @type {angular.Module} */
         var originalModule = angular.module(moduleName);
 
-        var injector = /** @type {$injector} */ angular.injector(['ng', 'ngMock', moduleName]);
+        var injector = /** @type {$injector} */ angular.injector(['ng', 'ngMock', 'ngImprovedTesting', moduleName]);
 
         var introspector = moduleIntrospector(moduleName);
 
