@@ -44,10 +44,14 @@ angular.module('ngImprovedTesting.$q', ['ngImprovedTesting.internal.config'])
                  * TODO: add description
                  */
                 result.tick = function () {
-                    angular.forEach(executeOnNextTick, function (callback) {
-                        callback();
-                    });
-                    executeOnNextTick.length = 0;
+                    while (executeOnNextTick.length) {
+                        var previousExecuteOnNextTick = executeOnNextTick.slice(0);
+
+                        executeOnNextTick.length = 0;
+                        for (var i = 0; i < previousExecuteOnNextTick.length; i += 1) {
+                            previousExecuteOnNextTick[i]();
+                        }
+                    }
                 };
             }
 

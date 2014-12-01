@@ -36,16 +36,24 @@ describe('$q service', function() {
         });
 
         describe('$q.tick method', function() {
+            var deferred1;
+            var deferred2;
+            var thenSuccessCallback1;
+            var thenSuccessCallback2;
+
+            beforeEach(function() {
+                deferred1 = $q.defer();
+                deferred2 = $q.defer();
+                thenSuccessCallback1 = jasmine.createSpy();
+                thenSuccessCallback2 = jasmine.createSpy();
+            });
+
+
             it('should have been added to the $q service', function() {
                 expect(angular.isFunction($q.tick)).toBe(true);
             });
 
             it('should execute all callbacks (that normally a $rootScope.$digest() would do)', function() {
-                var deferred1 = $q.defer();
-                var deferred2 = $q.defer();
-                var thenSuccessCallback1 = jasmine.createSpy();
-                var thenSuccessCallback2 = jasmine.createSpy();
-
                 deferred1.promise.then(thenSuccessCallback1);
                 deferred2.promise.then(thenSuccessCallback2);
 
@@ -55,6 +63,26 @@ describe('$q service', function() {
 
                 expect(thenSuccessCallback1).toHaveBeenCalledWith('aValue');
                 expect(thenSuccessCallback2).toHaveBeenCalledWith('anotherValue');
+            });
+
+            it('should also execute any chained callbacks at once', function() {
+                var thenChainedSuccessCallback1 = jasmine.createSpy();
+                var thenChainedSuccessCallback2 = jasmine.createSpy();
+
+                thenSuccessCallback1.andReturn('aPossibleModifiedValue');
+                thenSuccessCallback2.andReturn('anotherPossibleModifiedValue');
+
+                deferred1.promise.then(thenSuccessCallback1).then(thenChainedSuccessCallback1);
+                deferred2.promise.then(thenSuccessCallback2).then(thenChainedSuccessCallback2);
+
+                deferred1.resolve('aValue');
+                deferred2.resolve('anotherValue');
+                $q.tick();
+
+                expect(thenSuccessCallback1).toHaveBeenCalledWith('aValue');
+                expect(thenSuccessCallback2).toHaveBeenCalledWith('anotherValue');
+                expect(thenChainedSuccessCallback1).toHaveBeenCalledWith('aPossibleModifiedValue');
+                expect(thenChainedSuccessCallback2).toHaveBeenCalledWith('anotherPossibleModifiedValue');
             });
         });
     });
