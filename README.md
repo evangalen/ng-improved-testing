@@ -9,6 +9,9 @@ For more information about:
 
 Changes
 -------
+0.2.2
+ - Fixed #5 (Chained promises are not included when using $q.tick())
+
 0.2.1
  - Various changes to actually get $q.tick() working including enabling / disabling it
 
