@@ -9,6 +9,10 @@ For more information about:
 
 Changes
 -------
+0.3.0
+ - TODO: ...
+ - Fixed #8 (MockBuilder doesn't correctly handle components declared in inherited modules)
+
 0.2.3
  - Fixed #9 (ModuleBuilder doesn't support angular modules declared in .js file loading after .js file of Jasmine spec)
 
