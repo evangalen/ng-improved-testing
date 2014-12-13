@@ -4,9 +4,6 @@ describe('moduleBuilder service', function() {
 
     //TODO: add spec to test that "ngImprovedTesting" is added to the modules requires of the generated / created module
 
-    /** @const */
-    var angular1_0 = angular.version.full.indexOf('1.0.') === 0;
-
 
     /** @const */
     var nonMockableService = Object.freeze({aProperty: 'aValue'});
@@ -73,7 +70,7 @@ describe('moduleBuilder service', function() {
     });
 
     /** @const */
-    var originalModuleInstance = angular.module('moduleBuilderSpecModule', angular1_0 ? ['ng'] : ['ng', 'ngAnimate'])
+    var originalModuleInstance = angular.module('moduleBuilderSpecModule', ['ng', 'ngAnimate'])
         .value('nonMockableService', nonMockableService)
         .value('mockableServiceA', mockableServiceA)
         .value('mockableServiceB', mockableServiceB)
@@ -93,13 +90,9 @@ describe('moduleBuilder service', function() {
         .controller('aController',
                 ['$scope', 'nonMockableService', 'mockableServiceA', 'mockableServiceB', AControllerConstructor])
         .directive('aDirective',
-                ['nonMockableService', 'mockableServiceA', 'mockableServiceB', aDirectiveFactory]);
-
-    if (!angular1_0) {
-        originalModuleInstance.animation('.anAnimation',
+                ['nonMockableService', 'mockableServiceA', 'mockableServiceB', aDirectiveFactory])
+        .animation('.anAnimation',
             ['nonMockableService', 'mockableServiceA', 'mockableServiceB', anAnimationFactory]);
-
-    }
 
 
     var moduleBuilder;
@@ -924,12 +917,7 @@ describe('moduleBuilder service', function() {
         });
 
 
-        describe('animationWithMocks method (not available when using angular 1.0)', function() {
-
-            if (angular1_0) {
-                return;
-            }
-
+        describe('animationWithMocks method', function() {
 
             it('should return the module builder instance', function() {
                 var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
@@ -953,12 +941,7 @@ describe('moduleBuilder service', function() {
 
 
 
-        describe('animationWithMocksFor method (not available when using angular 1.0)', function() {
-
-            if (angular1_0) {
-                return;
-            }
-
+        describe('animationWithMocksFor method', function() {
 
             it('should return the module builder instance', function() {
                 var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
@@ -991,12 +974,7 @@ describe('moduleBuilder service', function() {
         });
 
 
-        describe('animationWithMocksExcept method (not available when using angular 1.0)', function() {
-
-            if (angular1_0) {
-                return;
-            }
-
+        describe('animationWithMocksExcept method', function() {
 
             it('should return the module builder instance', function() {
                 var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
@@ -1023,12 +1001,7 @@ describe('moduleBuilder service', function() {
         });
 
 
-        describe('animationAsIs method (not available when using angular 1.0)', function() {
-
-            if (angular1_0) {
-                return;
-            }
-
+        describe('animationAsIs method', function() {
 
             it('should return the module builder instance', function() {
                 var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
@@ -1135,38 +1108,34 @@ describe('moduleBuilder service', function() {
             });
         });
 
-
-        if (!angular1_0) {
-
-            it('like the $location service (not provided by "ngMock" module of angular 1.0)', function() {
+        it('like the $location service (not provided by "ngMock" module of angular 1.0)', function() {
 
 
-                var $locationUsingServiceFactoryFactory = jasmine.createSpy().andCallFake(function($location) {
-                    return {
-                        completeUrl: function() {
-                            return $location.absUrl();
-                        }
-                    };
-                });
-
-                var appModule = angular.module('$locationUsingServiceModule', []);
-
-                appModule.factory('$locationUsingService', ['$location', $locationUsingServiceFactoryFactory]);
-
-
-                moduleBuilder.forModule(appModule.name)
-                    .serviceWithMocks('$locationUsingService')
-                    .build();
-
-                inject(function($locationUsingService, $locationMock) {
-                    expect($locationMock).not.toBeNull();
-
-                    $locationMock.absUrl.andReturn('http://aComplete/url');
-
-                    expect($locationUsingService.completeUrl()).toBe('http://aComplete/url');
-                });
+            var $locationUsingServiceFactoryFactory = jasmine.createSpy().andCallFake(function($location) {
+                return {
+                    completeUrl: function() {
+                        return $location.absUrl();
+                    }
+                };
             });
-        }
+
+            var appModule = angular.module('$locationUsingServiceModule', []);
+
+            appModule.factory('$locationUsingService', ['$location', $locationUsingServiceFactoryFactory]);
+
+
+            moduleBuilder.forModule(appModule.name)
+                .serviceWithMocks('$locationUsingService')
+                .build();
+
+            inject(function($locationUsingService, $locationMock) {
+                expect($locationMock).not.toBeNull();
+
+                $locationMock.absUrl.andReturn('http://aComplete/url');
+
+                expect($locationUsingService.completeUrl()).toBe('http://aComplete/url');
+            });
+        });
 
     });
 
