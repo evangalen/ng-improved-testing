@@ -186,9 +186,10 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
             return this;
         };
 
-//        this.controllerMock = function(controllerName) {
+//        this.controllerMock = function(controllerName, controllerMockConfigurator) {
 //            // include a mocked controller; should support both "controller as" as traditional $scope-style
 //            //  TODO: how should I mock a $scope-style controller
+//            //  TODO: make sure that controllerMockConfigurator is optional
 //        };
 
         //TODO: comment
@@ -227,10 +228,11 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
             return this;
         };
 
-//        this.directiveMock = function(directiveName) {
+//        this.directiveMock = function(directiveName, directiveMockConfigurator) {
 //            // include a directive with a mocked controller but without any "link" or "compile" method;
 //            // should only work if there is exactly "one" directive with the provided directiveName that has a
 //            // (directive) controller
+//            //  TODO: make sure that directiveMockConfigurator is optional
 //        };
 
         //TODO: comment
