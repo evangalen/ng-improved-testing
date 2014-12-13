@@ -29,8 +29,19 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
             }
 
             toBeIncludedModuleComponents.push(toBeIncludedModuleComponent);
+
+            if (providerName === '$animateProvider') {
+                $animateProviderUsed = true;
+            }
         }
 
+
+        var $animateProviderUsed = false;
+
+        /** @type {?Function} */
+        var moduleConfigFn = null;
+
+        var includeAll = false;
 
         /**
          * @name ModuleBuilder.ToBeIncludedModuleComponent
@@ -45,17 +56,17 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
         /** @type {Object.<ModuleBuilder.ToBeIncludedModuleComponent>} */
         var toBeIncludedModuleComponents = [];
 
-//        /**
-//         * @param {Function} callback
-//         */
-//        this.config = function(callback) {
-//            // any config
-//        };
+        /**
+         * @param {Function} callback
+         */
+        this.config = function(callback) {
+            moduleConfigFn = callback;
+        };
 
         //TODO: finalize the name of this method
-//        this.includeAll() {
-//
-//        };
+        this.includeAll = function() {
+            includeAll = true;
+        };
 
         //TODO: comment
         this.serviceWithMocks = function(serviceName) {
@@ -409,6 +420,16 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
 
                 var injector = /** @type {$injector} */ angular.injector(['ng', 'ngMock', moduleName]);
 
+                if ($animateProviderUsed) {
+                    var $animate = injector.get('$animate');
+
+                    if ($animate.enabled === angular.noop) {
+                        throw 'Animations were included in the to be build module, but the orginal module didn\'t ' +
+                                'the "ngAnimate" module: ' + moduleName;
+                    }
+                }
+
+
                 var introspector = moduleIntrospector(moduleName);
 
 
@@ -428,6 +449,7 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
 
                 angular.forEach(asIsServices, function (originalService, serviceName) {
                     //TODO: skip built-in services?!? Or not?!?
+                    //TODO: should we also skip the services ($animate) from ngAnimate?!?
                     providers.$provide.value(serviceName, originalService);
                 });
 
@@ -438,10 +460,13 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
             });
 
             var mockMockArgs = [];
-            //TODO: push 'ngAnimate' only when specified (somewhere) in "requires" of the module "and" when actually
-            //  used in "declarations"
-            mockMockArgs.push('ngAnimate');
-            //TODO: push `moduleName` to mockMockArgs when `includeAll()` was invoked
+            if ($animateProviderUsed) {
+
+                mockMockArgs.push('ngAnimate');
+            }
+            if (includeAll) {
+                mockMockArgs.push(moduleName);
+            }
             mockMockArgs.push(populateModuleComponents);
             mockMockArgs.push('ngImprovedTesting');
 

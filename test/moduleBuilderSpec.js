@@ -2,7 +2,12 @@
 
 describe('moduleBuilder service', function() {
 
-    //TODO: add spec to test that "ngImprovedTesting" is added to the modules requires of the generated / created module
+    //TODO: add spec to test that:
+    // - "ngImprovedTesting" is added to the modules requires of the generated / created module
+    // - expection is thrown when animations are used by no "ngAnimate" requires exist
+    // - module config fn call be added `withConfig`
+    // - only the whole original module is included when `includeAll()` was invoked
+    // - only the components included using the ModuleBuilder (and its dependencies) will be added created module
 
 
     /** @const */
@@ -70,7 +75,7 @@ describe('moduleBuilder service', function() {
     });
 
     /** @const */
-    var originalModuleInstance = angular.module('moduleBuilderSpecModule', ['ng', 'ngAnimate'])
+    var originalModuleInstance = angular.module('moduleBuilderSpecModule', ['ngAnimate'])
         .value('nonMockableService', nonMockableService)
         .value('mockableServiceA', mockableServiceA)
         .value('mockableServiceB', mockableServiceB)
