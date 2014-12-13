@@ -8,6 +8,7 @@ describe('moduleBuilder service', function() {
     // - module config fn call be added `withConfig`
     // - only the whole original module is included when `includeAll()` was invoked
     // - only the components included using the ModuleBuilder (and its dependencies) will be added created module
+    // - issue #8 (MockBuilder doesn't correctly handle components declared in inherited modules) is fixed
 
 
     /** @const */
