@@ -461,7 +461,6 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
 
             var mockMockArgs = [];
             if ($animateProviderUsed) {
-
                 mockMockArgs.push('ngAnimate');
             }
             if (includeAll) {
