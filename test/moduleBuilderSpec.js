@@ -108,6 +108,53 @@ describe('moduleBuilder service', function() {
     var moduleIntrospectorInstance = null;
 
 
+    beforeEach(function(){
+        this.addMatchers({
+            toThrowModuleError: function(expectedWrappedMessage) {
+                var result = false;
+
+                if (typeof this.actual !== 'function') {
+                    throw new Error('Actual is not a function');
+                } else if (this.isNot) {
+                    throw new Error('Using ".not" is not supported with this matcher');
+                }
+
+                var exception;
+
+                try {
+                    this.actual();
+                } catch (e) {
+                    exception = e;
+
+                    var isError = Object.prototype.toString.call(e) === '[object Error]';
+                    if (!isError) {
+                        this.message = function() {
+                            return 'Excepted an exception of type Error:' + e;
+                        };
+                    }
+
+                    var actualErrorMessage = e.message;
+
+                    var errorMessageRegExp =
+                        /^\[\$injector:modulerr\]\ Failed to instantiate module .* due to:\n(.*)\n.*/;
+
+                    var regExpExecResult = errorMessageRegExp.exec(actualErrorMessage);
+
+                    result = regExpExecResult && regExpExecResult[1] === expectedWrappedMessage;
+
+                }
+
+                this.message = function() {
+                    return 'Expected function to throw ' + expectedWrappedMessage + ', but it threw ' +
+                            (exception && exception.message);
+                };
+
+                return result;
+            }
+        });
+    });
+
+
     beforeEach(function() {
         var ngModuleIntrospectorInjector = angular.injector(['ngModuleIntrospector']);
         var originalModuleIntrospector = ngModuleIntrospectorInjector.get('moduleIntrospector');
@@ -151,30 +198,11 @@ describe('moduleBuilder service', function() {
 
     describe('forModule method', function() {
 
-        it('should throw some exception when an angular module does not exist', function() {
-            expect(function() {
-                moduleBuilder.forModule('nonExistingModule');
-            }).toThrow();
-        });
-
         it('should create a builder object', function() {
             var result = moduleBuilder.forModule(originalModuleInstance.name);
 
             expect(angular.isObject(result)).toBe(true);
             expect(angular.isFunction(result.build)).toBe(true);
-        });
-
-        it('should create an angular injector for ["ng", "ngMock", <module-name>]', function() {
-            moduleBuilder.forModule(originalModuleInstance.name);
-
-            expect(createdInjector).toBeDefined();
-            expect(angular.injector).toHaveBeenCalledWith(['ng', 'ngMock', originalModuleInstance.name]);
-        });
-
-        it('should create a module introspector', function() {
-            moduleBuilder.forModule(originalModuleInstance.name);
-
-            expect(moduleIntrospectorInstance).toBeDefined();
         });
 
     });
@@ -183,19 +211,26 @@ describe('moduleBuilder service', function() {
 
     describe('ngImprovedTesting.ModuleBuilder', function() {
 
-        function testMockingOfDependenciesOfConstantAndValueServicesIsNotAllowed(methodName) {
-            originalModuleInstance.constant('aConstant', 'aConstantValue');
-            originalModuleInstance.constant('aValue', 'aValueValue');
+        function generateSpecTestingMockingOfDependenciesOfConstantAndValueServicesIsNotAllowed(methodName) {
+            it('for a "constant" service', function() {
+                originalModuleInstance.constant('aConstant', 'aConstantValue');
 
-            var moduleBuilderInstance = moduleBuilder.forModule(originalModuleInstance.name);
+                moduleBuilder.forModule(originalModuleInstance.name)[methodName]('aConstant').build();
 
-            expect(function() {
-                moduleBuilderInstance[methodName]('aConstant');
-            }).toThrow('Services declared with "contact" or "value" are not supported');
+                expect(function() {
+                    inject();
+                }).toThrowModuleError('Services declared with "contact" or "value" are not supported');
+            });
 
-            expect(function() {
-                moduleBuilderInstance[methodName]('aValue');
-            }).toThrow('Services declared with "contact" or "value" are not supported');
+            it('for a "value" service', function() {
+                originalModuleInstance.value('aValue', 'aValueValue');
+
+                moduleBuilder.forModule(originalModuleInstance.name)[methodName]('aValue').build();
+
+                expect(function() {
+                    inject();
+                }).toThrowModuleError('Services declared with "contact" or "value" are not supported');
+            });
         }
 
         function assertMockableDepenciesWereMocked(
@@ -242,8 +277,8 @@ describe('moduleBuilder service', function() {
 
         describe('serviceWithMocks method', function() {
 
-            it('should throw an exception when invoke for "constant" as well as "value" service', function() {
-                testMockingOfDependenciesOfConstantAndValueServicesIsNotAllowed('serviceWithMocks');
+            describe('should throw an exception when when build() and then inject(...) is invoked', function() {
+                generateSpecTestingMockingOfDependenciesOfConstantAndValueServicesIsNotAllowed('serviceWithMocks');
             });
 
             it('should return the module builder instance', function() {
@@ -255,7 +290,7 @@ describe('moduleBuilder service', function() {
             });
 
 
-            describe('when build() is invoked', function() {
+            describe('when build() and then inject(...) is invoked', function() {
 
                 it('should mock all mockable dependencies', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
@@ -307,8 +342,8 @@ describe('moduleBuilder service', function() {
 
         describe('serviceWithMocksFor method', function() {
 
-            it('should throw an exception when invoke for "constant" as well as "value" service', function() {
-                testMockingOfDependenciesOfConstantAndValueServicesIsNotAllowed('serviceWithMocksFor');
+            describe('should throw an exception when when build() and then inject(...) is invoked', function() {
+                generateSpecTestingMockingOfDependenciesOfConstantAndValueServicesIsNotAllowed('serviceWithMocksFor');
             });
 
             it('should return the module builder instance', function() {
@@ -319,7 +354,7 @@ describe('moduleBuilder service', function() {
                 expect(result).toBe(moduleBuilderInstance);
             });
 
-            describe('when build() is invoked', function() {
+            describe('when build() and then inject(...) is invoked', function() {
 
                 it('only a explicitly specified dependency should be mocked when its mockable', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
@@ -333,11 +368,13 @@ describe('moduleBuilder service', function() {
                 });
 
                 it('should throw exception when you explicitly want to mock a non-mockable service', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .serviceWithMocksFor('aServiceFactory', 'nonMockableService')
+                        .build();
+
                     expect(function() {
-                        moduleBuilder.forModule(originalModuleInstance.name)
-                            .serviceWithMocksFor('aServiceFactory', 'nonMockableService')
-                            .build();
-                    }).toThrow('Could not mock the dependency explicitly asked to mock: nonMockableService');
+                        inject();
+                    }).toThrowModuleError('Could not mock the dependency explicitly asked to mock: nonMockableService');
                 });
 
                 it('should support mocking dependencies of a "service" registered service', function() {
@@ -380,8 +417,9 @@ describe('moduleBuilder service', function() {
 
         describe('serviceWithMocksExcept method', function() {
 
-            it('should throw an exception when invoke for "constant" as well as "value" service', function() {
-                testMockingOfDependenciesOfConstantAndValueServicesIsNotAllowed('serviceWithMocksExcept');
+            describe('should throw an exception when when build() and then inject(...) is invoked', function() {
+                generateSpecTestingMockingOfDependenciesOfConstantAndValueServicesIsNotAllowed(
+                        'serviceWithMocksExcept');
             });
 
             it('should return the module builder instance', function() {
@@ -392,7 +430,7 @@ describe('moduleBuilder service', function() {
                 expect(result).toBe(moduleBuilderInstance);
             });
 
-            describe('when build() is invoked', function() {
+            describe('when build() and then inject(...) is invoked', function() {
 
                 it('should mock all mockable dependencies except when provided to be excluded', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
@@ -465,7 +503,7 @@ describe('moduleBuilder service', function() {
                 expect(result).toBe(moduleBuilderInstance);
             });
 
-            describe('when build() is invoked', function() {
+            describe('when build() and then inject(...) is invoked', function() {
 
                 it('should include the filter as is', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
@@ -492,7 +530,7 @@ describe('moduleBuilder service', function() {
                 expect(result).toBe(moduleBuilderInstance);
             });
 
-            describe('when build() is invoked', function() {
+            describe('when build() and then inject(...) is invoked', function() {
 
                 it('should mock all mockable dependencies', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
@@ -518,7 +556,7 @@ describe('moduleBuilder service', function() {
                 expect(result).toBe(moduleBuilderInstance);
             });
 
-            describe('when build() is invoked', function() {
+            describe('when build() and then inject(...) is invoked', function() {
 
                 it('only a explicitly specified dependency should be mocked when its mockable', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
@@ -532,11 +570,13 @@ describe('moduleBuilder service', function() {
                 });
 
                 it('should throw exception when you explicitly want to mock a non-mockable service', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .filterWithMocksFor('aFilter', 'nonMockableService')
+                        .build();
+
                     expect(function() {
-                        moduleBuilder.forModule(originalModuleInstance.name)
-                            .filterWithMocksFor('aFilter', 'nonMockableService')
-                            .build();
-                    }).toThrow('Could not mock the dependency explicitly asked to mock: nonMockableService');
+                        inject();
+                    }).toThrowModuleError('Could not mock the dependency explicitly asked to mock: nonMockableService');
                 });
             });
         });
@@ -552,7 +592,7 @@ describe('moduleBuilder service', function() {
                 expect(result).toBe(moduleBuilderInstance);
             });
 
-            describe('when build() is invoked', function() {
+            describe('when build() and then inject(...) is invoked', function() {
 
                 it('should mock all mockable dependencies except when provided to be excluded', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
@@ -590,7 +630,7 @@ describe('moduleBuilder service', function() {
                 expect(result).toBe(moduleBuilderInstance);
             });
 
-            describe('when build() is invoked', function() {
+            describe('when build() and then inject(...) is invoked', function() {
 
                 it('should include the filter as is', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
@@ -617,7 +657,7 @@ describe('moduleBuilder service', function() {
                 expect(result).toBe(moduleBuilderInstance);
             });
 
-            describe('when build() is invoked', function() {
+            describe('when build() and then inject(...) is invoked', function() {
 
                 it('should mock all mockable dependencies', function() {
                     var expectedScopeProperty = {};
@@ -654,7 +694,7 @@ describe('moduleBuilder service', function() {
                 expect(result).toBe(moduleBuilderInstance);
             });
 
-            describe('when build() is invoked', function() {
+            describe('when build() and then inject(...) is invoked', function() {
 
                 it('only a explicitly specified dependency should be mocked when its mockable', function() {
                     var expectedScopeProperty = {};
@@ -679,11 +719,13 @@ describe('moduleBuilder service', function() {
                 });
 
                 it('should throw exception when you explicitly want to mock a non-mockable service', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .controllerWithMocksFor('aController', 'nonMockableService')
+                        .build();
+
                     expect(function() {
-                        moduleBuilder.forModule(originalModuleInstance.name)
-                            .controllerWithMocksFor('aController', 'nonMockableService')
-                            .build();
-                    }).toThrow('Could not mock the dependency explicitly asked to mock: nonMockableService');
+                        inject();
+                    }).toThrowModuleError('Could not mock the dependency explicitly asked to mock: nonMockableService');
                 });
             });
         });
@@ -699,7 +741,7 @@ describe('moduleBuilder service', function() {
                 expect(result).toBe(moduleBuilderInstance);
             });
 
-            describe('when build() is invoked', function() {
+            describe('when build() and then inject(...) is invoked', function() {
 
                 it('only a explicitly specified dependency should be mocked when its mockable', function() {
                     var expectedScopeProperty = {};
@@ -736,7 +778,7 @@ describe('moduleBuilder service', function() {
                 expect(result).toBe(moduleBuilderInstance);
             });
 
-            describe('when build() is invoked', function() {
+            describe('when build() and then inject(...) is invoked', function() {
 
                 it('should include the controller as is', function() {
                     var expectedScopeProperty = {};
@@ -774,7 +816,7 @@ describe('moduleBuilder service', function() {
                 expect(result).toBe(moduleBuilderInstance);
             });
 
-            describe('when build() is invoked', function() {
+            describe('when build() and then inject(...) is invoked', function() {
 
                 it('should mock all mockable dependencies', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
@@ -801,7 +843,7 @@ describe('moduleBuilder service', function() {
                 expect(result).toBe(moduleBuilderInstance);
             });
 
-            describe('when build() is invoked', function() {
+            describe('when build() and then inject(...) is invoked', function() {
 
                 it('only a explicitly specified dependency should be mocked when its mockable', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
@@ -816,11 +858,13 @@ describe('moduleBuilder service', function() {
                 });
 
                 it('should throw exception when you explicitly want to mock a non-mockable service', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .directiveWithMocksFor('aDirective', 'nonMockableService')
+                        .build();
+
                     expect(function() {
-                        moduleBuilder.forModule(originalModuleInstance.name)
-                            .directiveWithMocksFor('aDirective', 'nonMockableService')
-                            .build();
-                    }).toThrow('Could not mock the dependency explicitly asked to mock: nonMockableService');
+                        inject();
+                    }).toThrowModuleError('Could not mock the dependency explicitly asked to mock: nonMockableService');
                 });
             });
         });
@@ -836,7 +880,7 @@ describe('moduleBuilder service', function() {
                 expect(result).toBe(moduleBuilderInstance);
             });
 
-            describe('when build() is invoked', function() {
+            describe('when build() and then inject(...) is invoked', function() {
 
                 it('only a explicitly specified dependency should be mocked when its mockable', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
@@ -863,7 +907,7 @@ describe('moduleBuilder service', function() {
                 expect(result).toBe(moduleBuilderInstance);
             });
 
-            describe('when build() is invoked', function() {
+            describe('when build() and then inject(...) is invoked', function() {
 
                 it('should include the directive as is', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
@@ -895,7 +939,7 @@ describe('moduleBuilder service', function() {
                 expect(result).toBe(moduleBuilderInstance);
             });
 
-            describe('when build() is invoked', function() {
+            describe('when build() and then inject(...) is invoked', function() {
 
                 it('should mock all mockable dependencies', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
@@ -924,7 +968,7 @@ describe('moduleBuilder service', function() {
                 expect(result).toBe(moduleBuilderInstance);
             });
 
-            describe('when build() is invoked', function() {
+            describe('when build() and then inject(...) is invoked', function() {
 
                 it('only a explicitly specified dependency should be mocked when its mockable', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
@@ -935,11 +979,13 @@ describe('moduleBuilder service', function() {
                 });
 
                 it('should throw exception when you explicitly want to mock a non-mockable service', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .animationWithMocksFor('.anAnimation', 'nonMockableService')
+                        .build();
+
                     expect(function() {
-                        moduleBuilder.forModule(originalModuleInstance.name)
-                            .animationWithMocksFor('.anAnimation', 'nonMockableService')
-                            .build();
-                    }).toThrow('Could not mock the dependency explicitly asked to mock: nonMockableService');
+                        inject();
+                    }).toThrowModuleError('Could not mock the dependency explicitly asked to mock: nonMockableService');
                 });
             });
         });
@@ -960,7 +1006,7 @@ describe('moduleBuilder service', function() {
                 expect(result).toBe(moduleBuilderInstance);
             });
 
-            describe('when build() is invoked', function() {
+            describe('when build() and then inject(...) is invoked', function() {
 
                 it('only a explicitly specified dependency should be mocked when its mockable', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
@@ -992,7 +1038,7 @@ describe('moduleBuilder service', function() {
                 expect(result).toBe(moduleBuilderInstance);
             });
 
-            describe('when build() is invoked', function() {
+            describe('when build() and then inject(...) is invoked', function() {
 
                 it('should include the directive as is', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
@@ -1004,6 +1050,38 @@ describe('moduleBuilder service', function() {
             });
         });
 
+
+        describe('when build() and then inject(...) is invoked', function() {
+            it('should throw some exception when an angular module does not exist', function() {
+                moduleBuilder.forModule('nonExistingModule').build();
+
+                expect(function() {
+                    inject();
+                }).toThrowModuleError('Error: [$injector:nomod] Module \'nonExistingModule\' is not available! ' +
+                        'You either misspelled the module name or forgot to load it. If registering a module ensure ' +
+                        'that you specify the dependencies as the second argument.');
+            });
+
+            it('should create an angular injector for ["ng", "ngMock", <module-name>]', function() {
+                moduleBuilder.forModule(originalModuleInstance.name).build();
+
+                expect(createdInjector).toBe(null);
+                expect(angular.injector).not.toHaveBeenCalledWith(['ng', 'ngMock', originalModuleInstance.name]);
+
+                inject();
+                expect(createdInjector).toBeDefined();
+                expect(angular.injector).toHaveBeenCalledWith(['ng', 'ngMock', originalModuleInstance.name]);
+            });
+
+            it('should create a module introspector', function() {
+                moduleBuilder.forModule(originalModuleInstance.name).build();
+
+                expect(moduleIntrospectorInstance).toBe(null);
+
+                inject();
+                expect(moduleIntrospectorInstance).toBeDefined();
+            });
+        });
 
     });
 
@@ -1091,4 +1169,21 @@ describe('moduleBuilder service', function() {
         }
 
     });
+
+    describe('when using the ModuleBuilder for a module that is declared after the spec is loaded', function() {
+        //NOTE: in this particular case use the exported "ModuleBuilder" since the "moduleBuilder" isn't available a the
+        //  time that the `ModuleBuilder.forModule(..)...` from the statement below is executed.
+        beforeEach(ModuleBuilder.forModule('aModuleDeclaredAfterLoadingAllSpecs') // jshint ignore:line
+            .serviceWithMocksFor('serviceUsingMockableService', 'someMockableService')
+            .build());
+
+        it('should also correctly support', function() {
+            inject(function(serviceUsingMockableService, someMockableServiceMock) {
+                serviceUsingMockableService.aMethod();
+
+                expect(someMockableServiceMock.someMethod).toHaveBeenCalledWith();
+            });
+        });
+    });
+
 });

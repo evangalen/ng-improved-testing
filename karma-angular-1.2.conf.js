@@ -17,7 +17,8 @@ module.exports = function(config) {
             'src/$q.js',
             'src/exports.js',
             'bower_components/angular-animation-1.2/angular-animate.js',
-            'test/**/*.js'
+            'test/!(moduleDeclaredAfterLoadedAllSpecs).js',
+            'test/moduleDeclaredAfterLoadedAllSpecs.js'
         ]
 
     });

@@ -32,21 +32,6 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
             toBeIncludedModuleComponents.push(toBeIncludedModuleComponent);
         }
 
-        function ensureNotAConstantOrValueService(serviceName) {
-            var providerMethod = introspector.getProviderComponentDeclaration('$provide', serviceName).providerMethod;
-
-            if (providerMethod === 'constant' || providerMethod === 'value') {
-                throw 'Services declared with "contact" or "value" are not supported';
-            }
-        }
-
-
-        /** @type {angular.Module} */
-        var originalModule = angular.module(moduleName);
-
-        var injector = /** @type {$injector} */ angular.injector(['ng', 'ngMock', moduleName]);
-
-        var introspector = moduleIntrospector(moduleName);
 
         /**
          * @name ModuleBuilder.ToBeIncludedModuleComponent
@@ -63,7 +48,6 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
 
         //TODO: comment
         this.serviceWithMocks = function(serviceName) {
-            ensureNotAConstantOrValueService(serviceName);
             includeProviderComponent('$provide', serviceName, 'withMocks');
             return this;
         };
@@ -79,7 +63,6 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
          * @returns {moduleIntrospectorFactory.ModuleBuilder} the module builder instance
          */
         this.serviceWithMocksFor = function(serviceName, toBeMockedDependencies) {
-            ensureNotAConstantOrValueService(serviceName);
             toBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
             includeProviderComponent('$provide', serviceName, 'withMocks', 'for', toBeMockedDependencies);
             return this;
@@ -87,7 +70,6 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
 
         //TODO: comment
         this.serviceWithMocksExcept = function(serviceName, notToBeMockedDependencies) {
-            ensureNotAConstantOrValueService(serviceName);
             notToBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
             includeProviderComponent('$provide', serviceName, 'withMocks', 'except', notToBeMockedDependencies);
             return this;
@@ -257,100 +239,13 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
          */
         this.build = function() {
 
-            function handleAsIsComponentKind(toBeIncludedModuleComponent) {
-                var providerName = toBeIncludedModuleComponent.providerName;
-                var componentName = toBeIncludedModuleComponent.componentName;
-
-                if (providerName === '$controllerProvider' || providerName === '$filterProvider' ||
-                        providerName === '$compileProvider' || providerName === '$animateProvider') {
-                    var providerComponentDeclaration =
-                        introspector.getProviderComponentDeclaration(providerName, componentName);
-
-                    angular.forEach(providerComponentDeclaration.injectedServices, function(injectedService) {
-                        if (injector.has(injectedService)) {
-                            asIsServices[injectedService] = injector.get(injectedService);
-                        }
-                    });
-
-                    declarations[componentName] = {
-                        providerName: providerName,
-                        providerMethod: providerComponentDeclaration.providerMethod,
-                        declaration: providerComponentDeclaration.rawDeclaration
-                    };
-                } else if (providerName === '$provide') {
-                    asIsServices[componentName] = injector.get(componentName);
-                } else {
-                    throw 'Unsupported provider: ' + providerName;
-                }
-            }
-
-            function handleWithMocksComponentKind(toBeIncludedModuleComponent) {
-                var providerName = toBeIncludedModuleComponent.providerName;
-                var componentName = toBeIncludedModuleComponent.componentName;
-
-                var providerComponentDeclaration =
-                    introspector.getProviderComponentDeclaration(providerName, componentName);
-
-                /** @type {(Array.<(string|Function)>|{$get: Array.<(string|Function)})} */
-                var annotatedDeclaration = [];
-
-                angular.forEach(providerComponentDeclaration.injectedServices, function (injectedService) {
-
-                    if (!injector.has(injectedService)) {
-                        annotatedDeclaration.push(injectedService);
-                    } else {
-                        var shouldBeMocked = dependencyShouldBeMocked(toBeIncludedModuleComponent, injectedService);
-
-                        var injectedServiceInstance = injector.get(injectedService);
-                        var canBeMocked = mockCreator.canInstanceBeMocked(injectedServiceInstance);
-
-                        if (shouldBeMocked && !canBeMocked &&
-                                toBeIncludedModuleComponent.dependenciesUsage === 'for') {
-                            throw 'Could not mock the dependency explicitly asked to mock: ' + injectedService;
-                        }
-
-                        var toBeMocked = shouldBeMocked && canBeMocked;
-
-                        if (toBeMocked) {
-                            mockedServices[injectedService] = injectedServiceInstance;
-                        } else {
-                            asIsServices[injectedService] = injectedServiceInstance;
-                        }
-
-                        annotatedDeclaration.push(injectedService + (toBeMocked ? 'Mock' : ''));
-                    }
-                });
-
-                annotatedDeclaration.push(providerComponentDeclaration.strippedDeclaration);
-
-                if (providerName === '$provide' && providerComponentDeclaration.providerMethod === 'provider') {
-                    annotatedDeclaration = {$get: annotatedDeclaration};
-                }
-
-                declarations[componentName] = {
-                    providerName: providerName,
-                    providerMethod: providerComponentDeclaration.providerMethod,
-                    declaration: annotatedDeclaration
-                };
-            }
-
-            function dependencyShouldBeMocked(toBeIncludedModuleComponent, dependencyName) {
-                var dependenciesUsage = toBeIncludedModuleComponent.dependenciesUsage;
-
-                if (dependenciesUsage === 'for') {
-                    return toBeIncludedModuleComponent.dependencies.indexOf(dependencyName) !== -1;
-                } else if (dependenciesUsage === 'except') {
-                    return toBeIncludedModuleComponent.dependencies.indexOf(dependencyName) === -1;
-                } else if (!dependenciesUsage) {
-                    return true;
-                } else {
-                    throw 'Invalid dependencies usage: ' + dependenciesUsage;
-                }
-            }
-
+            /**
+             * @param {function(object)} callback
+             * @returns {Array.<string|Function>}
+             */
             function configureProviders(callback) {
-                return function ($provide, $filterProvider, $controllerProvider, $compileProvider,
-                        $animateProvider) {
+                return ['$provide', '$filterProvider', '$controllerProvider', '$compileProvider', '$animateProvider',
+                        function($provide, $filterProvider, $controllerProvider, $compileProvider, $animateProvider) {
                     var providers = {
                         $provide: $provide,
                         $filterProvider: $filterProvider,
@@ -360,53 +255,170 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
                     };
 
                     callback(providers);
-                };
+                }];
             }
 
 
             var buildModuleName = 'generatedByNgImprovedTesting#' + numberOfBuildModules;
 
-            /** @type Object.<Object> */
-            var mockedServices = {};
-
-            /** @type Object.<Object> */
-            var asIsServices = {};
-
-            /**
-             * @type {Object.<{providerName: string, providerMethod: string, declaration: Array.<(string|Function)>}>}
-             */
-            var declarations = {};
-
-            var moduleRequires = originalModule.requires.slice(0);
-            moduleRequires.push('ngImprovedTesting');
-
-            var buildModule = angular.module(buildModuleName, moduleRequires);
-
-            angular.forEach(toBeIncludedModuleComponents, function(toBeIncludedModuleComponent) {
-                if (toBeIncludedModuleComponent.componentKind === 'asIs') {
-                    handleAsIsComponentKind(toBeIncludedModuleComponent);
-                } else if (toBeIncludedModuleComponent.componentKind === 'withMocks') {
-                    handleWithMocksComponentKind(toBeIncludedModuleComponent);
-                }
-            });
-
             numberOfBuildModules += 1;
 
-            return angular.mock.module(configureProviders(function(providers) {
-                angular.forEach(mockedServices, function(originalService, serviceName) {
+
+            var populateModuleComponents = configureProviders(function(providers) {
+                function handleAsIsComponentKind(toBeIncludedModuleComponent) {
+                    var providerName = toBeIncludedModuleComponent.providerName;
+                    var componentName = toBeIncludedModuleComponent.componentName;
+
+                    if (providerName === '$controllerProvider' || providerName === '$filterProvider' ||
+                        providerName === '$compileProvider' || providerName === '$animateProvider') {
+                        var providerComponentDeclaration =
+                            introspector.getProviderComponentDeclaration(providerName, componentName);
+
+                        angular.forEach(providerComponentDeclaration.injectedServices, function(injectedService) {
+                            if (injector.has(injectedService)) {
+                                asIsServices[injectedService] = injector.get(injectedService);
+                            }
+                        });
+
+                        declarations[componentName] = {
+                            providerName: providerName,
+                            providerMethod: providerComponentDeclaration.providerMethod,
+                            declaration: providerComponentDeclaration.rawDeclaration
+                        };
+                    } else if (providerName === '$provide') {
+                        asIsServices[componentName] = injector.get(componentName);
+                    } else {
+                        throw 'Unsupported provider: ' + providerName;
+                    }
+                }
+
+                function handleWithMocksComponentKind(toBeIncludedModuleComponent) {
+                    var providerName = toBeIncludedModuleComponent.providerName;
+                    var componentName = toBeIncludedModuleComponent.componentName;
+
+                    var providerComponentDeclaration =
+                        introspector.getProviderComponentDeclaration(providerName, componentName);
+
+                    /** @type {(Array.<(string|Function)>|{$get: Array.<(string|Function)})} */
+                    var annotatedDeclaration = [];
+
+                    if (providerName === '$provide') {
+                        var providerMethod =
+                            introspector.getProviderComponentDeclaration('$provide', componentName).providerMethod;
+
+                        if (providerMethod === 'constant' || providerMethod === 'value') {
+                            throw 'Services declared with "contact" or "value" are not supported';
+                        }
+                    }
+
+
+                    angular.forEach(providerComponentDeclaration.injectedServices, function (injectedService) {
+
+                        if (!injector.has(injectedService)) {
+                            annotatedDeclaration.push(injectedService);
+                        } else {
+                            var shouldBeMocked = dependencyShouldBeMocked(toBeIncludedModuleComponent, injectedService);
+
+                            var injectedServiceInstance = injector.get(injectedService);
+                            var canBeMocked = mockCreator.canInstanceBeMocked(injectedServiceInstance);
+
+                            if (shouldBeMocked && !canBeMocked &&
+                                toBeIncludedModuleComponent.dependenciesUsage === 'for') {
+                                throw 'Could not mock the dependency explicitly asked to mock: ' + injectedService;
+                            }
+
+                            var toBeMocked = shouldBeMocked && canBeMocked;
+
+                            if (toBeMocked) {
+                                mockedServices[injectedService] = injectedServiceInstance;
+                            } else {
+                                asIsServices[injectedService] = injectedServiceInstance;
+                            }
+
+                            annotatedDeclaration.push(injectedService + (toBeMocked ? 'Mock' : ''));
+                        }
+                    });
+
+                    annotatedDeclaration.push(providerComponentDeclaration.strippedDeclaration);
+
+                    if (providerName === '$provide' && providerComponentDeclaration.providerMethod === 'provider') {
+                        annotatedDeclaration = {$get: annotatedDeclaration};
+                    }
+
+                    declarations[componentName] = {
+                        providerName: providerName,
+                        providerMethod: providerComponentDeclaration.providerMethod,
+                        declaration: annotatedDeclaration
+                    };
+                }
+
+                function dependencyShouldBeMocked(toBeIncludedModuleComponent, dependencyName) {
+                    var dependenciesUsage = toBeIncludedModuleComponent.dependenciesUsage;
+
+                    if (dependenciesUsage === 'for') {
+                        return toBeIncludedModuleComponent.dependencies.indexOf(dependencyName) !== -1;
+                    } else if (dependenciesUsage === 'except') {
+                        return toBeIncludedModuleComponent.dependencies.indexOf(dependencyName) === -1;
+                    } else if (!dependenciesUsage) {
+                        return true;
+                    } else {
+                        throw 'Invalid dependencies usage: ' + dependenciesUsage;
+                    }
+                }
+
+
+                /** @type Object.<Object> */
+                var mockedServices = {};
+
+                /** @type Object.<Object> */
+                var asIsServices = {};
+
+                /**
+                 * @type {Object.<{providerName: string, providerMethod: string, declaration: Array.<(string|Function)>}>}
+                 */
+                var declarations = {};
+
+
+                /** @type {angular.Module} */
+                var originalModule = angular.module(moduleName);
+
+                var injector = /** @type {$injector} */ angular.injector(['ng', 'ngMock', moduleName]);
+
+                var introspector = moduleIntrospector(moduleName);
+
+
+                var moduleRequires = originalModule.requires.slice(0);
+                moduleRequires.push('ngImprovedTesting');
+
+                //TODO: remove after we did fix #8
+                angular.module(buildModuleName, moduleRequires);
+
+
+                angular.forEach(toBeIncludedModuleComponents, function(toBeIncludedModuleComponent) {
+                    if (toBeIncludedModuleComponent.componentKind === 'asIs') {
+                        handleAsIsComponentKind(toBeIncludedModuleComponent);
+                    } else if (toBeIncludedModuleComponent.componentKind === 'withMocks') {
+                        handleWithMocksComponentKind(toBeIncludedModuleComponent);
+                    }
+                });
+
+
+                angular.forEach(mockedServices, function (originalService, serviceName) {
                     var mockedService = mockCreator.mockInstance(originalService);
                     providers.$provide.value(serviceName + 'Mock', mockedService);
                 });
 
-                angular.forEach(asIsServices, function(originalService, serviceName) {
+                angular.forEach(asIsServices, function (originalService, serviceName) {
                     providers.$provide.value(serviceName, originalService);
                 });
 
-                angular.forEach(declarations, function(declarationInfo, declarationName) {
+                angular.forEach(declarations, function (declarationInfo, declarationName) {
                     providers[declarationInfo.providerName][declarationInfo.providerMethod](
                         declarationName, declarationInfo.declaration);
                 });
-            }), buildModule.name);
+            });
+
+            return angular.mock.module(populateModuleComponents, buildModuleName);
         };
 
     }
@@ -432,5 +444,5 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
 angular.module('ngImprovedTesting.internal.moduleBuilder', [
         'ngModuleIntrospector',
         'ngImprovedTesting.internal.mockCreator'
-     ])
+    ])
     .factory('moduleBuilder', moduleIntrospectorFactory);
