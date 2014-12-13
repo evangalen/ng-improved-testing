@@ -387,6 +387,10 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
                     }
                 }
 
+                function ensureModuleExist(moduleName) {
+                    angular.module(moduleName);
+                }
+
 
                 /** @type Object.<Object> */
                 var mockedServices = {};
@@ -398,6 +402,10 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
                  * @type {Object.<{providerName: string, providerMethod: string, declaration: Array.<(string|Function)>}>}
                  */
                 var declarations = {};
+
+
+                // ensure that the module exists. Throws an [$injector:nomod] whenever it not exists
+                ensureModuleExist(moduleName);
 
                 var injector = /** @type {$injector} */ angular.injector(['ng', 'ngMock', moduleName]);
 
@@ -429,10 +437,15 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
                 });
             });
 
-            //TODO: include 'ngAnimate' only when specified (somewhere) in "requires" of the module "and" when actually
+            var mockMockArgs = [];
+            //TODO: push 'ngAnimate' only when specified (somewhere) in "requires" of the module "and" when actually
             //  used in "declarations"
-            //TODO: only (prepend) `moduleName` to the arguments below when `includeAll()` was invoked
-            return angular.mock.module(moduleName, populateModuleComponents, 'ngImprovedTesting');
+            mockMockArgs.push('ngAnimate');
+            //TODO: push `moduleName` to mockMockArgs when `includeAll()` was invoked
+            mockMockArgs.push(populateModuleComponents);
+            mockMockArgs.push('ngImprovedTesting');
+
+            return angular.mock.module.apply(undefined, mockMockArgs);
         };
 
     }
