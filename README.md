@@ -9,6 +9,9 @@ For more information about:
 
 Changes
 -------
+0.2.3
+ - Fixed #9 (ModuleBuilder doesn't support angular modules declared in .js file loading after .js file of Jasmine spec)
+
 0.2.2
  - Fixed #5 (Chained promises are not included when using $q.tick())
 
