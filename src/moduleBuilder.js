@@ -61,11 +61,13 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
          */
         this.config = function(callback) {
             moduleConfigFn = callback;
+            return this;
         };
 
         //TODO: finalize the name of this method
         this.includeAll = function() {
             includeAll = true;
+            return this;
         };
 
         //TODO: comment
