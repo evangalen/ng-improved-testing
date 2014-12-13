@@ -8,7 +8,6 @@ describe('moduleBuilder service', function() {
     // - module config fn call be added `withConfig`
     // - only the whole original module is included when `includeAll()` was invoked
     // - only the components included using the ModuleBuilder (and its dependencies) will be added created module
-    // - issue #8 (MockBuilder doesn't correctly handle components declared in inherited modules) is fixed
 
 
     /** @const */
@@ -1158,6 +1157,34 @@ describe('moduleBuilder service', function() {
 
                 expect(someMockableServiceMock.someMethod).toHaveBeenCalledWith();
             });
+        });
+    });
+
+    it('should correctly components inherited from module in requires of parent module', function() {
+        angular.module('aModule', [])
+            .factory('someMockableService', function() {
+                return {
+                    someMethod: function() {}
+                };
+            })
+            .factory('serviceUsingMockableService', function(someMockableService) {
+                return {
+                    aMethod: function() {
+                        return someMockableService.someMethod();
+                    }
+                };
+            });
+
+        angular.module('anotherModule', ['aModule']);
+
+        moduleBuilder.forModule('anotherModule')
+            .serviceWithMocksFor('serviceUsingMockableService', 'someMockableService')
+            .build();
+
+        inject(function(serviceUsingMockableService, someMockableServiceMock) {
+            someMockableServiceMock.someMethod.andReturn('someValue');
+
+            expect(serviceUsingMockableService.aMethod()).toBe('someValue');
         });
     });
 
