@@ -171,6 +171,8 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator, $log) {
         //TODO: decide if we want to expose filters with '...FilterMock' (possibly) together with '...Mock'
         //TODO: should we support mocking filters using '...WithMocks', '...WithMocksFor' and ''...WithMocksExcept' in
         //  case the filter is used as an injected service through the '...Filter' name.
+        //TODO: should be using using '...WithMocks', '...WithMocksFor' and ''...WithMocksExcept' together with
+        //  'filterMock' the mock always be mocked? (i.e. also when nog included in '...WithMocks')
 //        this.filterMock = function(filterName) {
 //            // include a filter that can be found using "...FilterMock" (or not ?!?) and also through $filter('...')
 //        };
