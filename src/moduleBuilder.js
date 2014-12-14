@@ -211,6 +211,12 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator, $log) {
             return this;
         };
 
+        //TODO: puts entry to the mockedControllers hash causing the $controller to use the mocked controller
+        //  (instead of the original one).
+        //TODO: decide if we only want $controller to work for explicitly registered components, which could in this
+        //  case also be `...AsIs` components, (which could possible retrieve $controller using
+        //  $injector.get('$controller')
+        //      - same should also apply when using `inject(...)` in your tests
 //        this.controllerMock = function(controllerName, controllerMockConfigurator) {
 //            // include a mocked controller; should support both "controller as" as traditional $scope-style
 //            //  TODO: how should I mock a $scope-style controller
@@ -253,6 +259,11 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator, $log) {
             return this;
         };
 
+        //TODO: puts entry to the mockedDirectives hash causing the $compile to use the mocked directive
+        //  (instead of the original one).
+        //TODO: decide if we only want $compile to work for explicitly registered components, which could in this
+        //  case also be `...AsIs` components, (which could possible retrieve $compile using $injector.get('$compile')
+        //      - same should also apply when using `inject(...)` in your tests
 //        this.directiveMock = function(directiveName, directiveMockConfigurator) {
 //            // include a directive with a mocked controller but without any "link" or "compile" method;
 //            // should only work if there is exactly "one" directive with the provided directiveName that has a
