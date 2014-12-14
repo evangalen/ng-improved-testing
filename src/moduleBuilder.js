@@ -164,6 +164,13 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator, $log) {
             return this;
         };
 
+        //TODO: puts entry to the mockedFilters hash causing the $filter to return the mocked filter
+        //  (instead of the original one).
+        //TODO: decide if we only want $filter to work for explicitly registered components, which could in this case
+        //  also be `...AsIs` components, (which could possible retrieve $filter using $injector.get('$filter')
+        //TODO: decide if we want to expose filters with '...FilterMock' (possibly) together with '...Mock'
+        //TODO: should we support mocking filters using '...WithMocks', '...WithMocksFor' and ''...WithMocksExcept' in
+        //  case the filter is used as an injected service through the '...Filter' name.
 //        this.filterMock = function(filterName) {
 //            // include a filter that can be found using "...FilterMock" (or not ?!?) and also through $filter('...')
 //        };
