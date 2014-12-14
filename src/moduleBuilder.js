@@ -2,7 +2,7 @@
 
 
 // @ngInject
-function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
+function moduleIntrospectorFactory(moduleIntrospector, mockCreator, $log) {
 
     /**
      * @constructor
@@ -32,6 +32,22 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
 
             if (providerName === '$animateProvider') {
                 $animateProviderUsed = true;
+            }
+        }
+
+        function asIsMethodNameForProviderName(providerName) {
+            if (providerName === '$provide') {
+                return 'serviceAsIs';
+            } else if (providerName === '$filterProvider') {
+                return 'filterAsIs';
+            } else if (providerName === '$controllerProvider') {
+                return 'controllerAsIs';
+            } else if (providerName === '$compileProvider') {
+                return 'directiveAsIs';
+            } else if (providerName === '$animateProvider') {
+                return 'animationAsIs';
+            } else {
+                throw 'Unsupported provider: ' + providerName;
             }
         }
 
@@ -305,6 +321,12 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
                     var providerName = toBeIncludedModuleComponent.providerName;
                     var componentName = toBeIncludedModuleComponent.componentName;
 
+                    if (includeAll) {
+                        $log.warn('Ignoring `' + asIsMethodNameForProviderName(providerName) + '(' + componentName +
+                                ')` since `includeAll()` is also used.');
+                        return;
+                    }
+
                     if (providerName === '$controllerProvider' || providerName === '$filterProvider' ||
                         providerName === '$compileProvider' || providerName === '$animateProvider') {
                         var providerComponentDeclaration =
@@ -367,7 +389,7 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
 
                             if (toBeMocked) {
                                 mockedServices[injectedService] = injectedServiceInstance;
-                            } else {
+                            } else if (!includeAll) {
                                 asIsServices[injectedService] = injectedServiceInstance;
                             }
 

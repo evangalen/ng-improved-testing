@@ -8,6 +8,8 @@ describe('moduleBuilder service', function() {
     // - module config fn call be added `withConfig`
     // - only the whole original module is included when `includeAll()` was invoked
     // - only the components included using the ModuleBuilder (and its dependencies) will be added created module
+    // - "filterAsIs", "controllerAsIs", "directiveAsIs" and "animationAsIs" does nothing when `includeAll()` was
+    //   invoked besides logging a warning; "serviceAsIs" is already 100% tests this situation
 
 
     /** @const */
@@ -153,11 +155,13 @@ describe('moduleBuilder service', function() {
     });
 
 
+    var mockBuilder$Log = null;
+
     beforeEach(function() {
         var ngModuleIntrospectorInjector = angular.injector(['ngModuleIntrospector']);
         var originalModuleIntrospector = ngModuleIntrospectorInjector.get('moduleIntrospector');
 
-        var ngImprovedTestingInjector = angular.injector(['ngImprovedTesting.internal.moduleBuilder', function($provide) {
+        var ngImprovedTestingInjector = angular.injector(['ng', 'ngImprovedTesting.internal.moduleBuilder', function($provide) {
             var spiedModuleIntrospector = jasmine.createSpy().andCallFake(function() {
                 var result = originalModuleIntrospector.apply(this, arguments);
 
@@ -173,6 +177,12 @@ describe('moduleBuilder service', function() {
             });
 
             $provide.value('moduleIntrospector', spiedModuleIntrospector);
+
+            $provide.decorator('$log', function($delegate) {
+                mockBuilder$Log = $delegate;
+
+                return $delegate;
+            });
         }]);
 
         moduleBuilder = ngImprovedTestingInjector.get('moduleBuilder');
@@ -502,13 +512,64 @@ describe('moduleBuilder service', function() {
             });
 
             describe('when build() and then inject(...) is invoked', function() {
+                var registeredServiceValues = null;
 
-                it('should include the filter as is', function() {
+                beforeEach(function() {
+                    registeredServiceValues = {};
+
+                    var originalMockModuleFn = angular.mock.module;
+
+                    spyOn(angular.mock, 'module').andCallFake(function() {
+                        var argumentsArray = Array.prototype.slice.call(arguments, 0);
+
+                        var captureRegisteredServiceValues = function($provide) {
+                            var original$ProvideValueMethod = $provide.value;
+
+                            spyOn($provide, 'value').andCallFake(function(name, value) {
+                                if (typeof name === 'string') {
+                                    registeredServiceValues[name] = value;
+                                }
+
+                                return original$ProvideValueMethod.apply(this, arguments);
+                            });
+                        };
+
+                        var modifiedArguments = [];
+                        modifiedArguments.push(captureRegisteredServiceValues);
+                        for (var i = 0; i < argumentsArray.length; i += 1) {
+                            modifiedArguments.push(argumentsArray[i]);
+                        }
+
+                        return originalMockModuleFn.apply(this, modifiedArguments);
+                    });
+                });
+
+
+                it('should include the service as is (using $provide#value)', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
                         .serviceAsIs('aServiceFactory')
                         .build();
 
                     inject(function(aServiceFactory) {
+                        expect(registeredServiceValues.hasOwnProperty('aServiceFactory')).toBe(true);
+                        expect(aServiceFactory).toBeDefined();
+                        assertMockableDepenciesWereMocked(aServiceFactoryFactory, false, false);
+                    });
+                });
+
+                it('should do nothing and log warning when `includeAll()` was invoked', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .includeAll()
+                        .serviceAsIs('aServiceFactory')
+                        .build();
+
+                    spyOn(mockBuilder$Log, 'warn');
+
+                    inject(function(aServiceFactory) {
+                        expect(mockBuilder$Log.warn).toHaveBeenCalledWith(
+                                'Ignoring `serviceAsIs(aServiceFactory)` since `includeAll()` is also used.');
+
+                        expect(registeredServiceValues.hasOwnProperty('aServiceFactory')).toBe(false);
                         expect(aServiceFactory).toBeDefined();
                         assertMockableDepenciesWereMocked(aServiceFactoryFactory, false, false);
                     });
