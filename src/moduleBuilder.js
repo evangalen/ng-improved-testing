@@ -2,7 +2,7 @@
 
 
 // @ngInject
-function moduleIntrospectorFactory(moduleIntrospector, mockCreator, $log) {
+function moduleBuilderFactory(moduleIntrospector, mockCreator, $log) {
 
     /**
      * @constructor
@@ -336,6 +336,8 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator, $log) {
             }
 
 
+            var builtInServices = {};
+
             var populateModuleComponents = configureProviders(function(providers) {
                 function handleAsIsComponentKind(toBeIncludedModuleComponent) {
                     var providerName = toBeIncludedModuleComponent.providerName;
@@ -464,19 +466,79 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator, $log) {
                 // ensure that the module exists. Throws an [$injector:nomod] whenever it not exists
                 ensureModuleExist(moduleName);
 
-                var injector = /** @type {$injector} */ angular.injector(['ng', 'ngMock', moduleName]);
+
+                var registrationMethodNamePerProvider = {
+                    $filterProvider: 'register',
+                    $controllerProvider: 'register',
+                    $compileProvider: 'directive',
+                    $animateProvider: 'register'
+                };
+
+                var originalRegistrationMethodPerProvider = null;
+
+                var temporaryChangeProviderRegistrationMethodConfig = function(
+                        $filterProvider, $controllerProvider, $compileProvider, $animateProvider) {
+                    originalRegistrationMethodPerProvider = {
+                        $filterProvider: $filterProvider[registrationMethodNamePerProvider.$filterProvider],
+                        $controllerProvider: $controllerProvider[registrationMethodNamePerProvider.$controllerProvider],
+                        $compileProvider: $compileProvider[registrationMethodNamePerProvider.$compileProvider],
+                        $animateProvider: $animateProvider[registrationMethodNamePerProvider.$animateProvider]
+                    };
+
+                    registrationMethodNamePerProvider.$filterProvider = angular.noop;
+                    registrationMethodNamePerProvider.$controllerProvider = angular.noop;
+                    registrationMethodNamePerProvider.$compileProvider = angular.noop;
+                    registrationMethodNamePerProvider.$animateProvider = angular.noop;
+                };
+
+                var restoreProviderRegistrationMethodConfig = function(
+                        $filterProvider, $controllerProvider, $compileProvider, $animateProvider) {
+                    $filterProvider[registrationMethodNamePerProvider.$filterProvider] =
+                        originalRegistrationMethodPerProvider.$filterProvider;
+                    $controllerProvider[registrationMethodNamePerProvider.$controllerProvider] =
+                        originalRegistrationMethodPerProvider.$controllerProvider;
+                    $compileProvider[registrationMethodNamePerProvider.$compileProvider] =
+                        originalRegistrationMethodPerProvider.$compileProvider;
+                    $animateProvider[registrationMethodNamePerProvider.$animateProvider] =
+                        originalRegistrationMethodPerProvider.$animateProvider;
+                };
+
+                var injectorModules = ['ng', 'ngMock'];
+
+                if (!includeAll) {
+                    injectorModules.push(temporaryChangeProviderRegistrationMethodConfig);
+                }
+
+                injectorModules.push(moduleName);
+
+                if (!includeAll) {
+                    injectorModules.push(restoreProviderRegistrationMethodConfig);
+                }
+
+                if (moduleConfigFn) {
+                    injectorModules.push(moduleConfigFn);
+                }
+
+                var introspector = moduleIntrospector(moduleName, true);
+                var builtInProviderNames = introspector.getBuiltInProviderNames();
+
+                var injector = /** @type {$injector} */ angular.injector(injectorModules);
+
+                angular.forEach(builtInProviderNames, function(providerName) {
+                    var serviceName = providerName.substring(0, providerName.length - 'Provider'.length);
+                    builtInServices[serviceName] = injector.get(serviceName);
+                });
 
                 if ($animateProviderUsed) {
                     var $animate = injector.get('$animate');
 
                     if ($animate.enabled === angular.noop) {
-                        throw 'Animations were included in the to be build module, but the orginal module didn\'t ' +
+                        throw 'Animations are included in the to be build module, but the original module did not ' +
                                 'the "ngAnimate" module: ' + moduleName;
                     }
                 }
 
 
-                var introspector = moduleIntrospector(moduleName);
 
 
                 angular.forEach(toBeIncludedModuleComponents, function(toBeIncludedModuleComponent) {
@@ -512,7 +574,17 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator, $log) {
             if (includeAll) {
                 mockMockArgs.push(moduleName);
             }
+
+            if (!includeAll) {
+                mockMockArgs.push(function($provide) {
+                    angular.forEach(builtInServices, function (serviceInstance, serviceName) {
+                        $provide.value(serviceName, serviceInstance);
+                    });
+                });
+            }
+
             mockMockArgs.push(populateModuleComponents);
+
             mockMockArgs.push('ngImprovedTesting');
 
             return angular.mock.module.apply(undefined, mockMockArgs);
@@ -528,7 +600,7 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator, $log) {
         /**
          * @name moduleBuilder#forModule
          * @param {string} moduleName
-         * @returns {moduleIntrospectorFactory.ModuleBuilder}
+         * @returns {moduleBuilderFactory.ModuleBuilder}
          */
         forModule: function(moduleName) {
             return new ModuleBuilder(moduleName);
@@ -542,4 +614,4 @@ angular.module('ngImprovedTesting.internal.moduleBuilder', [
         'ngModuleIntrospector',
         'ngImprovedTesting.internal.mockCreator'
     ])
-    .factory('moduleBuilder', moduleIntrospectorFactory);
+    .factory('moduleBuilder', moduleBuilderFactory);

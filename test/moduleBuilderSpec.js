@@ -702,6 +702,72 @@ describe('moduleBuilder service', function() {
                     });
                 });
             });
+
+            describe('when build() and then inject(...) is invoked', function() {
+                var registeredFilters = null;
+
+                beforeEach(function() {
+                    registeredFilters = {};
+
+                    var originalMockModuleFn = angular.mock.module;
+
+                    spyOn(angular.mock, 'module').andCallFake(function() {
+                        var argumentsArray = Array.prototype.slice.call(arguments, 0);
+
+                        var captureRegisteredFilters = function($filterProvider) {
+                            var original$FilterProviderRegisterMethod = $filterProvider.register;
+
+                            spyOn($filterProvider, 'register').andCallFake(function(name, value) {
+                                if (typeof name === 'string') {
+                                    registeredFilters[name] = value;
+                                }
+
+                                return original$FilterProviderRegisterMethod.apply(this, arguments);
+                            });
+                        };
+
+                        var modifiedArguments = [];
+                        modifiedArguments.push(captureRegisteredFilters);
+                        for (var i = 0; i < argumentsArray.length; i += 1) {
+                            modifiedArguments.push(argumentsArray[i]);
+                        }
+
+                        return originalMockModuleFn.apply(this, modifiedArguments);
+                    });
+                });
+
+
+                it('should include the service as is (using $provide#value)', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .filterAsIs('aFilter')
+                        .build();
+
+                    inject(function(aFilterFilter) {
+                        expect(registeredFilters.hasOwnProperty('aFilter')).toBe(true);
+                        expect(aFilterFilter).toBeDefined();
+                        assertMockableDepenciesWereMocked(aFilterFactory, false, false);
+                    });
+                });
+
+                it('should do nothing and log warning when `includeAll()` was invoked', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .includeAll()
+                        .filterAsIs('aFilter')
+                        .build();
+
+                    spyOn(mockBuilder$Log, 'warn');
+
+                    inject(function(aFilterFilter) {
+                        expect(mockBuilder$Log.warn).toHaveBeenCalledWith(
+                            'Ignoring `filterAsIs(aFilter)` since `includeAll()` is also used.');
+
+                        expect(registeredFilters.hasOwnProperty('aServiceFactory')).toBe(false);
+                        expect(aFilterFilter).toBeDefined();
+                        assertMockableDepenciesWereMocked(aFilterFactory, false, false);
+                    });
+                });
+            });
+
         });
 
 
@@ -1101,15 +1167,24 @@ describe('moduleBuilder service', function() {
                         'that you specify the dependencies as the second argument.');
             });
 
-            it('should create an angular injector for ["ng", "ngMock", <module-name>]', function() {
+            it('should create an angular injector for ["ng", "ngMock", Function, <module-name>, Function]', function() {
                 moduleBuilder.forModule(originalModuleInstance.name).build();
 
                 expect(createdInjector).toBe(null);
-                expect(angular.injector).not.toHaveBeenCalledWith(['ng', 'ngMock', originalModuleInstance.name]);
+                expect(angular.injector).not.toHaveBeenCalled();
 
                 inject();
                 expect(createdInjector).toBeDefined();
-                expect(angular.injector).toHaveBeenCalledWith(['ng', 'ngMock', originalModuleInstance.name]);
+
+                expect(angular.injector).toHaveBeenCalled();
+                expect(angular.injector.mostRecentCall.args.length).toBe(1);
+                expect(angular.isArray(angular.injector.mostRecentCall.args[0])).toBe(true);
+                expect(angular.injector.mostRecentCall.args[0].length).toBe(5);
+                expect(angular.injector.mostRecentCall.args[0][0]).toBe('ng');
+                expect(angular.injector.mostRecentCall.args[0][1]).toBe('ngMock');
+                expect(angular.isFunction(angular.injector.mostRecentCall.args[0][2])).toBe(true);
+                expect(angular.injector.mostRecentCall.args[0][3]).toBe(originalModuleInstance.name);
+                expect(angular.isFunction(angular.injector.mostRecentCall.args[0][4])).toBe(true);
             });
 
             it('should create a module introspector', function() {
