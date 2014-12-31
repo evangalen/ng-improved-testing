@@ -337,6 +337,100 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator, $log) {
 
 
             var builtInServices = {};
+            var builtInServiceProviders = {};
+
+
+            var introspector;
+            var injector;
+
+            var instantiateIntrospectorAndInjector = function() {
+                var registrationMethodNamePerProvider = {
+                    $filterProvider: 'register',
+                    $controllerProvider: 'register',
+                    $compileProvider: 'directive',
+                    $animateProvider: 'register'
+                };
+
+                var originalRegistrationMethodPerProvider = null;
+
+                var temporaryChangeProviderRegistrationMethodConfig = function(
+                    $filterProvider, $controllerProvider, $compileProvider, $animateProvider) {
+                    originalRegistrationMethodPerProvider = {
+                        $filterProvider: $filterProvider[registrationMethodNamePerProvider.$filterProvider],
+                        $controllerProvider: $controllerProvider[registrationMethodNamePerProvider.$controllerProvider],
+                        $compileProvider: $compileProvider[registrationMethodNamePerProvider.$compileProvider],
+                        $animateProvider: $animateProvider[registrationMethodNamePerProvider.$animateProvider]
+                    };
+
+                    registrationMethodNamePerProvider.$filterProvider = angular.noop;
+                    registrationMethodNamePerProvider.$controllerProvider = angular.noop;
+                    registrationMethodNamePerProvider.$compileProvider = angular.noop;
+                    registrationMethodNamePerProvider.$animateProvider = angular.noop;
+                };
+
+                var restoreProviderRegistrationMethodConfig = function(
+                    $filterProvider, $controllerProvider, $compileProvider, $animateProvider) {
+                    $filterProvider[registrationMethodNamePerProvider.$filterProvider] =
+                        originalRegistrationMethodPerProvider.$filterProvider;
+                    $controllerProvider[registrationMethodNamePerProvider.$controllerProvider] =
+                        originalRegistrationMethodPerProvider.$controllerProvider;
+                    $compileProvider[registrationMethodNamePerProvider.$compileProvider] =
+                        originalRegistrationMethodPerProvider.$compileProvider;
+                    $animateProvider[registrationMethodNamePerProvider.$animateProvider] =
+                        originalRegistrationMethodPerProvider.$animateProvider;
+                };
+
+                var providerInjector = null;
+                var $provideProvider = null;
+
+                var injectorModules = ['ng', 'ngMock'];
+
+                if (!includeAll) {
+                    injectorModules.push(function($injector, $provide) {
+                        providerInjector = $injector;
+                        $provideProvider = $provide;
+                    });
+                    injectorModules.push(temporaryChangeProviderRegistrationMethodConfig);
+                }
+
+                injectorModules.push(moduleName);
+
+                if (!includeAll) {
+                    injectorModules.push(restoreProviderRegistrationMethodConfig);
+                }
+
+                if (moduleConfigFn) {
+                    injectorModules.push(moduleConfigFn);
+                }
+
+                introspector = moduleIntrospector(moduleName, true);
+
+                injector = /** @type {$injector} */ angular.injector(injectorModules);
+
+                if (!includeAll) {
+                    var builtInProviderNames = introspector.getBuiltInProviderNames();
+
+                    angular.forEach(builtInProviderNames, function(providerName) {
+                        var serviceName = providerName.substring(0, providerName.length - 'Provider'.length);
+
+                        var serviceInstance = injector.get(serviceName);
+
+                        builtInServiceProviders[serviceName] = angular.extend(providerInjector.get(providerName), {
+                            $get: function() {
+                                return serviceInstance;
+                            }
+                        });
+                    });
+
+                    var builtInNonProviderServiceNames = introspector.getBuiltInNonProviderServiceNames();
+
+                    angular.forEach(builtInNonProviderServiceNames, function(serviceName) {
+                        builtInServices[serviceName] = injector.get(serviceName);
+
+                        builtInServices.$provideProvider = $provideProvider;
+                    });
+                }
+            };
 
             var populateModuleComponents = configureProviders(function(providers) {
                 function handleAsIsComponentKind(toBeIncludedModuleComponent) {
@@ -467,70 +561,6 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator, $log) {
                 ensureModuleExist(moduleName);
 
 
-                var registrationMethodNamePerProvider = {
-                    $filterProvider: 'register',
-                    $controllerProvider: 'register',
-                    $compileProvider: 'directive',
-                    $animateProvider: 'register'
-                };
-
-                var originalRegistrationMethodPerProvider = null;
-
-                var temporaryChangeProviderRegistrationMethodConfig = function(
-                        $filterProvider, $controllerProvider, $compileProvider, $animateProvider) {
-                    originalRegistrationMethodPerProvider = {
-                        $filterProvider: $filterProvider[registrationMethodNamePerProvider.$filterProvider],
-                        $controllerProvider: $controllerProvider[registrationMethodNamePerProvider.$controllerProvider],
-                        $compileProvider: $compileProvider[registrationMethodNamePerProvider.$compileProvider],
-                        $animateProvider: $animateProvider[registrationMethodNamePerProvider.$animateProvider]
-                    };
-
-                    registrationMethodNamePerProvider.$filterProvider = angular.noop;
-                    registrationMethodNamePerProvider.$controllerProvider = angular.noop;
-                    registrationMethodNamePerProvider.$compileProvider = angular.noop;
-                    registrationMethodNamePerProvider.$animateProvider = angular.noop;
-                };
-
-                var restoreProviderRegistrationMethodConfig = function(
-                        $filterProvider, $controllerProvider, $compileProvider, $animateProvider) {
-                    $filterProvider[registrationMethodNamePerProvider.$filterProvider] =
-                        originalRegistrationMethodPerProvider.$filterProvider;
-                    $controllerProvider[registrationMethodNamePerProvider.$controllerProvider] =
-                        originalRegistrationMethodPerProvider.$controllerProvider;
-                    $compileProvider[registrationMethodNamePerProvider.$compileProvider] =
-                        originalRegistrationMethodPerProvider.$compileProvider;
-                    $animateProvider[registrationMethodNamePerProvider.$animateProvider] =
-                        originalRegistrationMethodPerProvider.$animateProvider;
-                };
-
-                var injectorModules = ['ng', 'ngMock'];
-
-                if (!includeAll) {
-                    injectorModules.push(temporaryChangeProviderRegistrationMethodConfig);
-                }
-
-                injectorModules.push(moduleName);
-
-                if (!includeAll) {
-                    injectorModules.push(restoreProviderRegistrationMethodConfig);
-                }
-
-                if (moduleConfigFn) {
-                    injectorModules.push(moduleConfigFn);
-                }
-
-                var introspector = moduleIntrospector(moduleName, true);
-
-                var injector = /** @type {$injector} */ angular.injector(injectorModules);
-
-                if (!includeAll) {
-                    var builtInProviderNames = introspector.getBuiltInProviderNames();
-
-                    angular.forEach(builtInProviderNames, function(providerName) {
-                        var serviceName = providerName.substring(0, providerName.length - 'Provider'.length);
-                        builtInServices[serviceName] = injector.get(serviceName);
-                    });
-                }
 
                 if ($animateProviderUsed) {
                     var $animate = injector.get('$animate');
@@ -577,11 +607,29 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator, $log) {
 
             if (includeAll) {
                 mockModuleArgs.push(moduleName);
-            } else {
+            }
+
+            mockModuleArgs.push(instantiateIntrospectorAndInjector);
+
+            if (!includeAll) {
                 mockModuleArgs.push(function($provide) {
-                    angular.forEach(builtInServices, function (serviceInstance, serviceName) {
+                    angular.forEach(builtInServiceProviders, function (providerInstance, serviceName) {
+                        $provide.provider(serviceName, providerInstance);
+                    });
+
+                    angular.forEach(builtInServices, function(serviceInstance, serviceName) {
                         $provide.value(serviceName, serviceInstance);
                     });
+
+                    // make sure that "...Filter" and "...Directive" are also available as a service
+                    var origFn = builtInServices.$provideProvider.factory;
+                    builtInServices.$provideProvider.factory = function() {
+                        var result = origFn.apply(this, arguments);
+
+                        $provide.factory.apply($provide, arguments);
+
+                        return result;
+                    };
                 });
             }
 
