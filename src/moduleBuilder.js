@@ -520,14 +520,17 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator, $log) {
                 }
 
                 var introspector = moduleIntrospector(moduleName, true);
-                var builtInProviderNames = introspector.getBuiltInProviderNames();
 
                 var injector = /** @type {$injector} */ angular.injector(injectorModules);
 
-                angular.forEach(builtInProviderNames, function(providerName) {
-                    var serviceName = providerName.substring(0, providerName.length - 'Provider'.length);
-                    builtInServices[serviceName] = injector.get(serviceName);
-                });
+                if (!includeAll) {
+                    var builtInProviderNames = introspector.getBuiltInProviderNames();
+
+                    angular.forEach(builtInProviderNames, function(providerName) {
+                        var serviceName = providerName.substring(0, providerName.length - 'Provider'.length);
+                        builtInServices[serviceName] = injector.get(serviceName);
+                    });
+                }
 
                 if ($animateProviderUsed) {
                     var $animate = injector.get('$animate');
@@ -571,11 +574,10 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator, $log) {
             if ($animateProviderUsed && !includeAll) {
                 mockMockArgs.push('ngAnimate');
             }
+
             if (includeAll) {
                 mockMockArgs.push(moduleName);
-            }
-
-            if (!includeAll) {
+            } else {
                 mockMockArgs.push(function($provide) {
                     angular.forEach(builtInServices, function (serviceInstance, serviceName) {
                         $provide.value(serviceName, serviceInstance);
