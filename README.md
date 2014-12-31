@@ -12,6 +12,7 @@ Changes
 0.3.0
  - TODO: ...
  - Fixed #8 (MockBuilder doesn't correctly handle components declared in inherited modules)
+ - Fixed #11 (Using ModuleBuilder.forModule('app') on a module which uses $location breaks the tests)
 
 0.2.3
  - Fixed #9 (ModuleBuilder doesn't support angular modules declared in .js file loading after .js file of Jasmine spec)
