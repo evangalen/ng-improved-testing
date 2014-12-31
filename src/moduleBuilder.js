@@ -570,26 +570,26 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator, $log) {
                 });
             });
 
-            var mockMockArgs = [];
+            var mockModuleArgs = [];
             if ($animateProviderUsed && !includeAll) {
-                mockMockArgs.push('ngAnimate');
+                mockModuleArgs.push('ngAnimate');
             }
 
             if (includeAll) {
-                mockMockArgs.push(moduleName);
+                mockModuleArgs.push(moduleName);
             } else {
-                mockMockArgs.push(function($provide) {
+                mockModuleArgs.push(function($provide) {
                     angular.forEach(builtInServices, function (serviceInstance, serviceName) {
                         $provide.value(serviceName, serviceInstance);
                     });
                 });
             }
 
-            mockMockArgs.push(populateModuleComponents);
+            mockModuleArgs.push(populateModuleComponents);
 
-            mockMockArgs.push('ngImprovedTesting');
+            mockModuleArgs.push('ngImprovedTesting');
 
-            return angular.mock.module.apply(undefined, mockMockArgs);
+            return angular.mock.module.apply(undefined, mockModuleArgs);
         };
 
     }
