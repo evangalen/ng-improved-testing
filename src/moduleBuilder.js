@@ -269,8 +269,7 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
                     var annotatedDeclaration = [];
 
                     if (providerName === '$provide') {
-                        var providerMethod =
-                            introspector.getProviderComponentDeclaration('$provide', componentName).providerMethod;
+                        var providerMethod = providerComponentDeclaration.providerMethod;
 
                         if (providerMethod === 'constant' || providerMethod === 'value') {
                             throw 'Services declared with "contact" or "value" are not supported';
