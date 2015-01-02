@@ -72,11 +72,9 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
          * Includes a service that replaces the dependencies specified in <em>toBeMockedDependencies</em> with mock
          * implementations.
          *
-         * NOTE: services from AngularJS itself will never be mocked.
-         *
          * @param {string} serviceName the name of the service to be registered
          * @param {...string} toBeMockedDependencies dependencies to be replaced with a mock implementation
-         * @returns {moduleIntrospectorFactory.ModuleBuilder} the module builder instance
+         * @returns {moduleBuilderFactory.ModuleBuilder} the module builder instance
          */
         this.serviceWithMocksFor = function(serviceName, toBeMockedDependencies) {
             toBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
@@ -101,11 +99,9 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
          * Includes a filter that replaces the dependencies specified in <em>toBeMockedDependencies</em> with mock
          * implementations.
          *
-         * NOTE: services from AngularJS itself will never be mocked
-         *
          * @param {string} filterName name of the filter to be included in the to be build module
          * @param {...string} toBeMockedDependencies dependencies to be replaced with a mock implementation
-         * @returns {moduleIntrospectorFactory.ModuleBuilder} the module builder instance
+         * @returns {moduleBuilderFactory.ModuleBuilder} the module builder instance
          */
         this.filterWithMocksFor = function(filterName, toBeMockedDependencies) {
             includeProviderComponent('$filterProvider', filterName, 'withMocks', 'for', toBeMockedDependencies);
@@ -142,7 +138,7 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
          *
          * @param {string} controllerName name of the controller to be included in the to be build module
          * @param {...string} toBeMockedDependencies dependencies to be replaced with a mock implementation
-         * @returns {moduleIntrospectorFactory.ModuleBuilder}
+         * @returns {moduleBuilderFactory.ModuleBuilder}
          */
         this.controllerWithMocksFor = function(controllerName, toBeMockedDependencies) {
             toBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
@@ -179,7 +175,7 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
          *
          * @param {string} directiveName name of the controller to be included in the to be build module
          * @param {...string} toBeMockedDependencies dependencies to be replaced with a mock implementation
-         * @returns {moduleIntrospectorFactory.ModuleBuilder}
+         * @returns {moduleBuilderFactory.ModuleBuilder}
          */
         this.directiveWithMocksFor = function(directiveName, toBeMockedDependencies) {
             toBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
@@ -216,7 +212,7 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
          *
          * @param {string} animationName name of the controller to be included in the to be build module
          * @param {...string} toBeMockedDependencies dependencies to be replaced with a mock implementation
-         * @returns {moduleIntrospectorFactory.ModuleBuilder}
+         * @returns {moduleBuilderFactory.ModuleBuilder}
          */
         this.animationWithMocksFor = function(animationName, toBeMockedDependencies) {
             toBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
