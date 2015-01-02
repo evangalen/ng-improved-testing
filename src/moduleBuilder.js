@@ -306,7 +306,27 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
                     annotatedDeclaration.push(providerComponentDeclaration.strippedDeclaration);
 
                     if (providerName === '$provide' && providerComponentDeclaration.providerMethod === 'provider') {
-                        annotatedDeclaration = {$get: annotatedDeclaration};
+                        var $provideProviderDeclaration =
+                            introspector.getProviderDeclaration(componentName + 'Provider');
+
+                        if (angular.isFunction($provideProviderDeclaration.strippedDeclaration)) {
+                            var original$provideProviderFactory = $provideProviderDeclaration.strippedDeclaration;
+
+                            var originalAnnotatedDeclaration = annotatedDeclaration;
+
+                            var modified$ProvideProviderFactory = function() {
+                                var result = original$provideProviderFactory.apply(this, arguments);
+                                var instance = angular.isObject(result) ? result : this;
+                                instance.$get = originalAnnotatedDeclaration;
+                                return result;
+                            };
+
+                            annotatedDeclaration =
+                                Array.prototype.slice.call($provideProviderDeclaration.injectedProviders);
+                            annotatedDeclaration.push(modified$ProvideProviderFactory);
+                        } else {
+                            annotatedDeclaration = {$get: annotatedDeclaration};
+                        }
                     }
 
                     declarations[componentName] = {

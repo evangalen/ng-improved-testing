@@ -76,6 +76,22 @@ describe('moduleBuilder service', function() {
         };
     });
 
+    var aServiceProviderConstructor = function() {
+        this.$get = ['nonMockableService', 'mockableServiceA', 'mockableServiceB', $getProviderFactory];
+    };
+
+    var aServiceProviderConstructorAnnotated = ['$logProvider', function($logProvider) {
+        expect($logProvider.debugEnabled()).toBe(true);
+        return aServiceProviderConstructor.apply(this, arguments);
+    }];
+
+    var aServiceProviderConstructorWith$Inject = function($logProvider) {
+        expect($logProvider.debugEnabled()).toBe(true);
+        return aServiceProviderConstructor.apply(this, arguments);
+    };
+    aServiceProviderConstructorWith$Inject.$inject = ['$logProvider'];
+
+
     /** @const */
     var originalModuleInstance = angular.module('moduleBuilderSpecModule', ['ngAnimate'])
         .value('nonMockableService', nonMockableService)
@@ -88,11 +104,9 @@ describe('moduleBuilder service', function() {
         .provider('aServiceProviderObject', {
             $get: ['nonMockableService', 'mockableServiceA', 'mockableServiceB', $getProviderFactory]
         })
-        .provider('aServiceProviderFactory', function() {
-            return {
-                $get: ['nonMockableService', 'mockableServiceA', 'mockableServiceB', $getProviderFactory]
-            };
-        })
+        .provider('aServiceProviderConstructor', aServiceProviderConstructor)
+        .provider('aServiceProviderConstructorAnnotated', aServiceProviderConstructorAnnotated)
+        .provider('aServiceProviderConstructorWith$Inject', aServiceProviderConstructorWith$Inject)
         .filter('aFilter', ['nonMockableService', 'mockableServiceA', 'mockableServiceB', aFilterFactory])
         .controller('aController',
                 ['$scope', 'nonMockableService', 'mockableServiceA', 'mockableServiceB', AControllerConstructor])
@@ -326,13 +340,37 @@ describe('moduleBuilder service', function() {
                 });
 
                 it('should support mocking dependencies of a "provider" registered service with an ' +
-                        'factory', function() {
+                        'constructor', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
-                        .serviceWithMocks('aServiceProviderFactory')
+                        .serviceWithMocks('aServiceProviderConstructor')
                         .build();
 
-                    inject(function(aServiceProviderFactory) {
-                        expect(aServiceProviderFactory).toBeDefined();
+                    inject(function(aServiceProviderConstructor) {
+                        expect(aServiceProviderConstructor).toBeDefined();
+                        assertMockableDependenciesWereMocked($getProviderFactory, true, true);
+                    });
+                });
+
+                it('should support mocking dependencies of a "provider" registered service with an ' +
+                        'constructor that is annotated', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .serviceWithMocks('aServiceProviderConstructorAnnotated')
+                        .build();
+
+                    inject(function(aServiceProviderConstructorAnnotated) {
+                        expect(aServiceProviderConstructorAnnotated).toBeDefined();
+                        assertMockableDependenciesWereMocked($getProviderFactory, true, true);
+                    });
+                });
+
+                it('should support mocking dependencies of a "provider" registered service with an ' +
+                        'constructor that has a $inject property', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .serviceWithMocks('aServiceProviderConstructorWith$Inject')
+                        .build();
+
+                    inject(function(aServiceProviderConstructorWith$Inject) {
+                        expect(aServiceProviderConstructorWith$Inject).toBeDefined();
                         assertMockableDependenciesWereMocked($getProviderFactory, true, true);
                     });
                 });
@@ -400,17 +438,40 @@ describe('moduleBuilder service', function() {
                 });
 
                 it('should support mocking dependencies of a "provider" registered service with an ' +
-                        'factory', function() {
+                        'constructor', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
-                        .serviceWithMocksFor('aServiceProviderFactory', 'mockableServiceB')
+                        .serviceWithMocksFor('aServiceProviderConstructor', 'mockableServiceB')
                         .build();
 
-                    inject(function(aServiceProviderFactory) {
-                        expect(aServiceProviderFactory).toBeDefined();
+                    inject(function(aServiceProviderConstructor) {
+                        expect(aServiceProviderConstructor).toBeDefined();
                         assertMockableDependenciesWereMocked($getProviderFactory, false, true);
                     });
                 });
 
+                it('should support mocking dependencies of a "provider" registered service with an ' +
+                        'constructor that is annotated', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .serviceWithMocksFor('aServiceProviderConstructorAnnotated', 'mockableServiceB')
+                        .build();
+
+                    inject(function(aServiceProviderConstructorAnnotated) {
+                        expect(aServiceProviderConstructorAnnotated).toBeDefined();
+                        assertMockableDependenciesWereMocked($getProviderFactory, false, true);
+                    });
+                });
+
+                it('should support mocking dependencies of a "provider" registered service with an ' +
+                        'constructor that has a $inject property', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .serviceWithMocksFor('aServiceProviderConstructorWith$Inject', 'mockableServiceB')
+                        .build();
+
+                    inject(function(aServiceProviderConstructorWith$Inject) {
+                        expect(aServiceProviderConstructorWith$Inject).toBeDefined();
+                        assertMockableDependenciesWereMocked($getProviderFactory, false, true);
+                    });
+                });
             });
         });
 
@@ -478,17 +539,40 @@ describe('moduleBuilder service', function() {
                 });
 
                 it('should support mocking dependencies of a "provider" registered service with an ' +
-                        'factory', function() {
+                        'constructor', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
-                        .serviceWithMocksExcept('aServiceProviderFactory', 'mockableServiceA')
+                        .serviceWithMocksExcept('aServiceProviderConstructor', 'mockableServiceA')
                         .build();
 
-                    inject(function(aServiceProviderFactory) {
-                        expect(aServiceProviderFactory).toBeDefined();
+                    inject(function(aServiceProviderConstructor) {
+                        expect(aServiceProviderConstructor).toBeDefined();
                         assertMockableDependenciesWereMocked($getProviderFactory, false, true);
                     });
                 });
 
+                it('should support mocking dependencies of a "provider" registered service with an ' +
+                        'constructor that is annotated', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .serviceWithMocksExcept('aServiceProviderConstructorAnnotated', 'mockableServiceA')
+                        .build();
+
+                    inject(function(aServiceProviderConstructorAnnotated) {
+                        expect(aServiceProviderConstructorAnnotated).toBeDefined();
+                        assertMockableDependenciesWereMocked($getProviderFactory, false, true);
+                    });
+                });
+
+                it('should support mocking dependencies of a "provider" registered service with an ' +
+                        'constructor that has a $inject property', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .serviceWithMocksExcept('aServiceProviderConstructorWith$Inject', 'mockableServiceA')
+                        .build();
+
+                    inject(function(aServiceProviderConstructorWith$Inject) {
+                        expect(aServiceProviderConstructorWith$Inject).toBeDefined();
+                        assertMockableDependenciesWereMocked($getProviderFactory, false, true);
+                    });
+                });
             });
         });
 
