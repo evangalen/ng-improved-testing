@@ -824,6 +824,8 @@ describe('moduleBuilder service', function() {
                         assertMockableDependenciesWereMocked(aDirectiveFactory, true, true);
                     });
                 });
+
+                //TODO: add tests to test that a directive with controller and / or compile / link is using mocks (also in its controller)
             });
         });
 
@@ -861,6 +863,8 @@ describe('moduleBuilder service', function() {
                         inject();
                     }).toThrowModuleError('Could not mock the dependency explicitly asked to mock: nonMockableService');
                 });
+
+                //TODO: add tests to test that a directive with controller and / or compile / link is using mocks (also in its controller)
             });
         });
 
@@ -912,6 +916,8 @@ describe('moduleBuilder service', function() {
 
                     testAnimationWithMocks(true, true);
                 });
+
+                //TODO: add tests to test that a directive with controller and / or compile / link is using mocks (also in its controller)
             });
         });
 

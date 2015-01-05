@@ -258,8 +258,7 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
                     var providerName = toBeIncludedModuleComponent.providerName;
                     var componentName = toBeIncludedModuleComponent.componentName;
 
-                    var providerComponentDeclaration =
-                        introspector.getProviderComponentDeclaration(providerName, componentName);
+                    var providerComponentDeclaration = getProviderComponentDeclaration(providerName, componentName);
 
                     /** @type {(Array.<(string|Function)>|{$get: Array.<(string|Function)})} */
                     var annotatedDeclaration = [];
@@ -331,6 +330,22 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
                     };
                 }
 
+                function getProviderComponentDeclaration(providerName, componentName) {
+                    var providerComponentDeclarations = introspector.getProviderComponentDeclarations(providerName, componentName);
+
+                    if (providerComponentDeclarations.length === 1) {
+                        return providerComponentDeclarations[0];
+                    } else if (providerComponentDeclarations.length === 2 && providerName === '$compilerProvider' &&
+                            providerComponentDeclarations[0].builtIn !== providerComponentDeclarations[0].builtIn) {
+                        return !providerComponentDeclarations[0].builtIn ? providerComponentDeclarations[0] :
+                                providerComponentDeclarations[1];
+                    } else {
+                        throw new Error('Could not determine unique component declaration for provider "' + providerName + '":' +
+                                componentName);
+                    }
+
+                }
+
                 function dependencyShouldBeMocked(toBeIncludedModuleComponent, dependencyName) {
                     var dependenciesUsage = toBeIncludedModuleComponent.dependenciesUsage;
 
@@ -347,6 +362,12 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
 
                 function ensureModuleExist(moduleName) {
                     angular.module(moduleName);
+                }
+
+                function valueFn(value) {
+                    return function() {
+                        return value;
+                    };
                 }
 
 
@@ -399,8 +420,32 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
                 });
 
                 angular.forEach(declarations, function (declarationInfo, declarationName) {
-                    providers[declarationInfo.providerName][declarationInfo.providerMethod](
-                        declarationName, declarationInfo.declaration);
+                    if (declarationInfo.providerName !== '$compileProvider') {
+                        providers[declarationInfo.providerName][declarationInfo.providerMethod](
+                            declarationName, declarationInfo.declaration);
+                    } else {
+                        providers.$provide.decorator(declarationName + 'Directive', function($delegate, $injector) {
+                            var index = $delegate.length === 1 ? 0 : (!$delegate[0].builtIn ? 0 : 1);
+
+                            var directive = $injector.invoke(declarationInfo.declaration);
+
+                            if (angular.isFunction(directive)) {
+                                $delegate[index].compile = valueFn(directive);
+                            } else if (!directive.compile && directive.link) {
+                                $delegate[index].compile = valueFn(directive.link);
+                            }
+
+                            if (directive.link) {
+                                $delegate[index].link = directive.link;
+                            }
+
+                            if (directive.controller) {
+                                $delegate[index].controller = directive.controller;
+                            }
+
+                            return $delegate;
+                        });
+                    }
                 });
             });
 
