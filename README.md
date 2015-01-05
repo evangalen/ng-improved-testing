@@ -48,3 +48,8 @@ Changes
  - Support for testing directives with mocked dependencies
 
 0.1.0 Initial release
+
+Bower
+-----
+You can easily install and add it to an existing project that uses Bower using the following command:
+bower install ng-improved-testing --save-dev
