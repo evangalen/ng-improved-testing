@@ -10,9 +10,11 @@ For more information about:
 Changes
 -------
 0.3.0
- - TODO: ...
+ - The ModuleBuilder now includes the whole original module;
+   Since the whole module is now includes there is no need for any of the "...AsIs" methods (i.e. "serviceAsIs") and therefor all off them hav been removed.
  - Fixed #8 (MockBuilder doesn't correctly handle components declared in inherited modules)
  - Fixed #11 (Using ModuleBuilder.forModule('app') on a module which uses $location breaks the tests)
+ - Fixed #12 (Prevent duplicate directive when mocking the injected services of a directive enhancement)
 
 0.2.3
  - Fixed #9 (ModuleBuilder doesn't support angular modules declared in .js file loading after .js file of Jasmine spec)
