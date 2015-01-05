@@ -51,5 +51,6 @@ Changes
 
 Bower
 -----
-You can easily install and add it to an existing project that uses Bower using the following command:
-bower install ng-improved-testing --save-dev
+You can easily install and add it to an existing project using the following command:
+
+    bower install ng-improved-testing --save-dev
