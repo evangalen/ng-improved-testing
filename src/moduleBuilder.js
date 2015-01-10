@@ -29,14 +29,8 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
             }
 
             toBeIncludedModuleComponents.push(toBeIncludedModuleComponent);
-
-            if (providerName === '$animateProvider') {
-                $animateProviderUsed = true;
-            }
         }
 
-
-        var $animateProviderUsed = false;
 
         /** @type {?Function} */
         var moduleConfigFn = null;
@@ -399,16 +393,6 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
                 var introspector = moduleIntrospector(moduleName, true);
 
                 var injector = /** @type {$injector} */ angular.injector(injectorModules);
-
-
-                if ($animateProviderUsed) {
-                    var $animate = injector.get('$animate');
-
-                    if ($animate.enabled === angular.noop) {
-                        throw 'Animations are included in the to be build module, but the original module did not ' +
-                                'the "ngAnimate" module: ' + moduleName;
-                    }
-                }
 
 
                 angular.forEach(toBeIncludedModuleComponents, function(toBeIncludedModuleComponent) {
