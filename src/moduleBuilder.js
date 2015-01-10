@@ -260,6 +260,10 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
 
                     var providerComponentDeclaration = getProviderComponentDeclaration(providerName, componentName);
 
+                    if (providerComponentDeclaration.builtIn) {
+                        throw 'Built-in components are not allowed to be overridden: ' + componentName;
+                    }
+
                     /** @type {(Array.<(string|Function)>|{$get: Array.<(string|Function)})} */
                     var annotatedDeclaration = [];
 

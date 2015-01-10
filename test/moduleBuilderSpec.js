@@ -306,6 +306,16 @@ describe('moduleBuilder service', function() {
 
             describe('when build() and then inject(...) is invoked', function() {
 
+                it('should throw exception when mocking dependencies of a built-in service', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .serviceWithMocks('$http')
+                        .build();
+
+                    expect(function() {
+                        inject();
+                    }).toThrowModuleError('Built-in components are not allowed to be overridden: $http');
+                });
+
                 it('should mock all mockable dependencies', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
                         .serviceWithMocks('aServiceFactory')
@@ -339,8 +349,7 @@ describe('moduleBuilder service', function() {
                     });
                 });
 
-                it('should support mocking dependencies of a "provider" registered service with an ' +
-                        'constructor', function() {
+                it('should support mocking dependencies of a "provider" registered service with an constructor', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
                         .serviceWithMocks('aServiceProviderConstructor')
                         .build();
@@ -351,8 +360,8 @@ describe('moduleBuilder service', function() {
                     });
                 });
 
-                it('should support mocking dependencies of a "provider" registered service with an ' +
-                        'constructor that is annotated', function() {
+                it('should support mocking dependencies of a "provider" registered service with an constructor that is ' +
+                        'annotated', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
                         .serviceWithMocks('aServiceProviderConstructorAnnotated')
                         .build();
@@ -363,8 +372,8 @@ describe('moduleBuilder service', function() {
                     });
                 });
 
-                it('should support mocking dependencies of a "provider" registered service with an ' +
-                        'constructor that has a $inject property', function() {
+                it('should support mocking dependencies of a "provider" registered service with an constructor that has a $inject ' +
+                        'property', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
                         .serviceWithMocks('aServiceProviderConstructorWith$Inject')
                         .build();
@@ -393,6 +402,16 @@ describe('moduleBuilder service', function() {
             });
 
             describe('when build() and then inject(...) is invoked', function() {
+
+                it('should throw exception when mocking dependencies of a built-in service', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .serviceWithMocksFor('$http', '$cacheFactory')
+                        .build();
+
+                    expect(function() {
+                        inject();
+                    }).toThrowModuleError('Built-in components are not allowed to be overridden: $http');
+                });
 
                 it('only a explicitly specified dependency should be mocked when its mockable', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
@@ -493,6 +512,16 @@ describe('moduleBuilder service', function() {
 
             describe('when build() and then inject(...) is invoked', function() {
 
+                it('should throw exception when mocking dependencies of a built-in service', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .serviceWithMocksExcept('$http', '$q')
+                        .build();
+
+                    expect(function() {
+                        inject();
+                    }).toThrowModuleError('Built-in components are not allowed to be overridden: $http');
+                });
+
                 it('should mock all mockable dependencies except when provided to be excluded', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
                         .serviceWithMocksExcept('aServiceFactory', 'mockableServiceA')
@@ -504,8 +533,7 @@ describe('moduleBuilder service', function() {
                     });
                 });
 
-                it('should ignore (not throw an exception) any non-mockable dependencies when provided to be ' +
-                        'excluded', function() {
+                it('should ignore (not throw an exception) any non-mockable dependencies when provided to be excluded', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
                         .serviceWithMocksExcept('aServiceFactory', 'mockableServiceA', 'nonMockableService')
                         .build();
@@ -538,8 +566,7 @@ describe('moduleBuilder service', function() {
                     });
                 });
 
-                it('should support mocking dependencies of a "provider" registered service with an ' +
-                        'constructor', function() {
+                it('should support mocking dependencies of a "provider" registered service with an constructor', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
                         .serviceWithMocksExcept('aServiceProviderConstructor', 'mockableServiceA')
                         .build();
@@ -550,8 +577,8 @@ describe('moduleBuilder service', function() {
                     });
                 });
 
-                it('should support mocking dependencies of a "provider" registered service with an ' +
-                        'constructor that is annotated', function() {
+                it('should support mocking dependencies of a "provider" registered service with an constructor that is ' +
+                        'annotated', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
                         .serviceWithMocksExcept('aServiceProviderConstructorAnnotated', 'mockableServiceA')
                         .build();
@@ -562,8 +589,8 @@ describe('moduleBuilder service', function() {
                     });
                 });
 
-                it('should support mocking dependencies of a "provider" registered service with an ' +
-                        'constructor that has a $inject property', function() {
+                it('should support mocking dependencies of a "provider" registered service with an constructor that has a $inject ' +
+                        'property', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
                         .serviceWithMocksExcept('aServiceProviderConstructorWith$Inject', 'mockableServiceA')
                         .build();
@@ -590,6 +617,16 @@ describe('moduleBuilder service', function() {
 
             describe('when build() and then inject(...) is invoked', function() {
 
+                it('should throw exception when mocking dependencies of a built-in filter', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .filterWithMocks('orderBy')
+                        .build();
+
+                    expect(function() {
+                        inject();
+                    }).toThrowModuleError('Built-in components are not allowed to be overridden: orderBy');
+                });
+
                 it('should mock all mockable dependencies', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
                         .filterWithMocks('aFilter')
@@ -615,6 +652,16 @@ describe('moduleBuilder service', function() {
             });
 
             describe('when build() and then inject(...) is invoked', function() {
+
+                it('should throw exception when mocking dependencies of a built-in filter', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .filterWithMocksFor('orderBy', '$parse')
+                        .build();
+
+                    expect(function() {
+                        inject();
+                    }).toThrowModuleError('Built-in components are not allowed to be overridden: orderBy');
+                });
 
                 it('only a explicitly specified dependency should be mocked when its mockable', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
@@ -652,6 +699,16 @@ describe('moduleBuilder service', function() {
 
             describe('when build() and then inject(...) is invoked', function() {
 
+                it('should throw exception when mocking dependencies of a built-in filter', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .filterWithMocksExcept('orderBy', '$parse')
+                        .build();
+
+                    expect(function() {
+                        inject();
+                    }).toThrowModuleError('Built-in components are not allowed to be overridden: orderBy');
+                });
+
                 it('should mock all mockable dependencies except when provided to be excluded', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
                         .filterWithMocksExcept('aFilter', 'mockableServiceA')
@@ -663,8 +720,7 @@ describe('moduleBuilder service', function() {
                     });
                 });
 
-                it('should ignore (not throw an exception) any non-mockable dependencies when provided to be ' +
-                    'excluded', function() {
+                it('should ignore (not throw an exception) any non-mockable dependencies when provided to be excluded', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
                         .filterWithMocksExcept('aFilter', 'mockableServiceA', 'nonMockableService')
                         .build();
@@ -813,6 +869,16 @@ describe('moduleBuilder service', function() {
 
             describe('when build() and then inject(...) is invoked', function() {
 
+                it('should throw exception when mocking dependencies of a built-in directive', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .directiveWithMocks('input')
+                        .build();
+
+                    expect(function() {
+                        inject();
+                    }).toThrowModuleError('Built-in components are not allowed to be overridden: input');
+                });
+
                 it('should mock all mockable dependencies', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
                         .directiveWithMocks('aDirective')
@@ -841,6 +907,16 @@ describe('moduleBuilder service', function() {
             });
 
             describe('when build() and then inject(...) is invoked', function() {
+
+                it('should throw exception when mocking dependencies of a built-in directive', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .directiveWithMocksFor('input', '$browser')
+                        .build();
+
+                    expect(function() {
+                        inject();
+                    }).toThrowModuleError('Built-in components are not allowed to be overridden: input');
+                });
 
                 it('only a explicitly specified dependency should be mocked when its mockable', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
@@ -880,6 +956,16 @@ describe('moduleBuilder service', function() {
             });
 
             describe('when build() and then inject(...) is invoked', function() {
+
+                it('should throw exception when mocking dependencies of a built-in directive', function() {
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .directiveWithMocksExcept('input', '$sniffer')
+                        .build();
+
+                    expect(function() {
+                        inject();
+                    }).toThrowModuleError('Built-in components are not allowed to be overridden: input');
+                });
 
                 it('only a explicitly specified dependency should be mocked when its mockable', function() {
                     moduleBuilder.forModule(originalModuleInstance.name)
@@ -991,8 +1077,8 @@ describe('moduleBuilder service', function() {
                 expect(function() {
                     inject();
                 }).toThrowModuleError('Error: [$injector:nomod] Module \'nonExistingModule\' is not available! ' +
-                        'You either misspelled the module name or forgot to load it. If registering a module ensure ' +
-                        'that you specify the dependencies as the second argument.');
+                        'You either misspelled the module name or forgot to load it. If registering a module ensure that you specify the ' +
+                        'dependencies as the second argument.');
             });
 
             it('should create an angular injector for ["ng", "ngMock", Function, <module-name>, Function]', function() {
