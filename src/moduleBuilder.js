@@ -6,8 +6,9 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
 
     /**
      * @constructor
+     * @param {Array.<(string|Function|Object)>} modules
      */
-    function ModuleBuilder(moduleName) {
+    function ModuleBuilder(modules) {
 
         /**
          * @param {string} providerName
@@ -32,9 +33,6 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
         }
 
 
-        /** @type {?Function} */
-        var moduleConfigFn = null;
-
         /**
          * @name ModuleBuilder.ToBeIncludedModuleComponent
          * @typedef {Object}
@@ -47,14 +45,6 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
 
         /** @type {Object.<ModuleBuilder.ToBeIncludedModuleComponent>} */
         var toBeIncludedModuleComponents = [];
-
-        /**
-         * @param {Function} callback
-         */
-        this.config = function(callback) {
-            moduleConfigFn = callback;
-            return this;
-        };
 
         //TODO: comment
         this.serviceWithMocks = function(serviceName) {
@@ -333,12 +323,11 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
 
                     if (providerComponentDeclarations.length === 1) {
                         return providerComponentDeclarations[0];
-                    } else if (providerComponentDeclarations.length === 2 && providerName === '$compilerProvider' &&
-                            providerComponentDeclarations[0].builtIn !== providerComponentDeclarations[0].builtIn) {
-                        return !providerComponentDeclarations[0].builtIn ? providerComponentDeclarations[0] :
-                                providerComponentDeclarations[1];
+                    } else if (providerComponentDeclarations.length === 2 && providerName === '$compileProvider' &&
+                            providerComponentDeclarations[0].builtIn) {
+                        return providerComponentDeclarations[1];
                     } else {
-                        throw new Error('Could not determine unique component declaration for provider "' + providerName + '":' +
+                        throw new Error('Could not determine unique component declaration for provider "' + providerName + '": ' +
                                 componentName);
                     }
 
@@ -358,10 +347,6 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
                     }
                 }
 
-                function ensureModuleExist(moduleName) {
-                    angular.module(moduleName);
-                }
-
                 function valueFn(value) {
                     return function() {
                         return value;
@@ -378,19 +363,21 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
                 var declarations = {};
 
 
-                // ensure that the module exists. Throws an [$injector:nomod] whenever it not exists
-                ensureModuleExist(moduleName);
-
-
                 var injectorModules = ['ng', 'ngMock'];
 
-                injectorModules.push(moduleName);
+                angular.forEach(modules, function(currentModule) {
+                    if (angular.isObject(currentModule) && !angular.isArray(currentModule)) {
+                        injectorModules.push(function($provide) {
+                            angular.forEach(currentModule, function(value, key) {
+                                $provide.value(key, value);
+                            });
+                        });
+                    } else {
+                        injectorModules.push(currentModule);
+                    }
+                });
 
-                if (moduleConfigFn) {
-                    injectorModules.push(moduleConfigFn);
-                }
-
-                var introspector = moduleIntrospector(moduleName, true);
+                var introspector = moduleIntrospector(modules, true);
 
                 var injector = /** @type {$injector} */ angular.injector(injectorModules);
 
@@ -413,7 +400,7 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
                             declarationName, declarationInfo.declaration);
                     } else {
                         providers.$provide.decorator(declarationName + 'Directive', function($delegate, $injector) {
-                            var index = $delegate.length === 1 ? 0 : (!$delegate[0].builtIn ? 0 : 1);
+                            var index = $delegate.length === 1 ? 0 : 1;
 
                             var directive = $injector.invoke(declarationInfo.declaration);
 
@@ -421,10 +408,8 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
                                 $delegate[index].compile = valueFn(directive);
                             } else if (!directive.compile && directive.link) {
                                 $delegate[index].compile = valueFn(directive.link);
-                            }
-
-                            if (directive.link) {
-                                $delegate[index].link = directive.link;
+                            } else if (directive.compile) {
+                                $delegate[index].compile = directive.compile;
                             }
 
                             if (directive.controller) {
@@ -437,8 +422,7 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
                 });
             });
 
-
-            return angular.mock.module(moduleName, populateModuleComponents, 'ngImprovedTesting');
+            return angular.mock.module.apply(undefined, [].concat(modules).concat([populateModuleComponents, 'ngImprovedTesting']));
         };
 
     }
@@ -450,11 +434,22 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
     return {
         /**
          * @name moduleBuilder#forModule
-         * @param {string} moduleName
+         * @param {string|Function|Object} module
          * @returns {moduleBuilderFactory.ModuleBuilder}
          */
-        forModule: function(moduleName) {
-            return new ModuleBuilder(moduleName);
+        forModule: function(module) {
+            return new ModuleBuilder([module]);
+        },
+
+        /**
+         * @name moduleBuilder#forModules
+         * @param {...(string|Function|Object)} modules
+         * @returns {moduleBuilderFactory.ModuleBuilder}
+         */
+        forModules: function(modules) {
+            modules = Array.prototype.slice.call(arguments);
+
+            return new ModuleBuilder(modules);
         }
     };
 

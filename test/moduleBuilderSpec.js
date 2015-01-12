@@ -226,6 +226,21 @@ describe('moduleBuilder service', function() {
 
 
 
+    describe('forModules method', function() {
+
+        it('should create a builder object', function() {
+            angular.module('anAdditionalModule', []);
+
+            var result = moduleBuilder.forModules(originalModuleInstance.name, 'anAdditionalModule');
+
+            expect(angular.isObject(result)).toBe(true);
+            expect(angular.isFunction(result.build)).toBe(true);
+        });
+
+    });
+
+
+
     describe('ngImprovedTesting.ModuleBuilder', function() {
 
         function generateSpecTestingMockingOfDependenciesOfConstantAndValueServicesIsNotAllowed(methodName) {
@@ -894,7 +909,149 @@ describe('moduleBuilder service', function() {
                     });
                 });
 
-                //TODO: add tests to test that a directive with controller and / or compile / link is using mocks (also in its controller)
+                it('should mock directive with a link function as its declaration', function() {
+                    originalModuleInstance.directive('aDirectiveWithLinkFnAsDeclaration', [
+                                'nonMockableService', 'mockableServiceA', 'mockableServiceB',
+                                function(nonMockableService, mockableServiceA, mockableServiceB) {
+                                    return function() {
+                                        mockableServiceA.aMethod();
+                                        mockableServiceB.aMethod();
+                                    };
+                                }]);
+
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .directiveWithMocks('aDirectiveWithLinkFnAsDeclaration')
+                        .build();
+
+                    inject(function($compile, $rootScope, mockableServiceAMock, mockableServiceBMock) {
+                        $compile('<div data-a-directive-with-link-fn-as-declaration></div>')($rootScope.$new());
+
+                        expect(mockableServiceAMock.aMethod).toHaveBeenCalledWith();
+                        expect(mockableServiceBMock.aMethod).toHaveBeenCalledWith();
+                    });
+                });
+
+                it('should mock directive with a link function in the ddo', function() {
+                    originalModuleInstance.directive('aDirectiveWithLinkFnInDdo', [
+                                'nonMockableService', 'mockableServiceA', 'mockableServiceB',
+                                function(nonMockableService, mockableServiceA, mockableServiceB) {
+                                    return {
+                                        link: function() {
+                                            mockableServiceA.aMethod();
+                                            mockableServiceB.aMethod();
+                                        }
+                                    };
+                                }]);
+
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .directiveWithMocks('aDirectiveWithLinkFnInDdo')
+                        .build();
+
+                    inject(function($compile, $rootScope, mockableServiceAMock, mockableServiceBMock) {
+                        $compile('<div data-a-directive-with-link-fn-in-ddo></div>')($rootScope.$new());
+
+                        expect(mockableServiceAMock.aMethod).toHaveBeenCalledWith();
+                        expect(mockableServiceBMock.aMethod).toHaveBeenCalledWith();
+                    });
+                });
+
+                it('should mock directive with a compile function in the ddo', function() {
+                    originalModuleInstance.directive('aDirectiveWithCompileFnInDdo', [
+                                'nonMockableService', 'mockableServiceA', 'mockableServiceB',
+                                function(nonMockableService, mockableServiceA, mockableServiceB) {
+                                    return {
+                                        compile: function() {
+                                            mockableServiceA.aMethod();
+                                            mockableServiceB.aMethod();
+                                        }
+                                    };
+                                }]);
+
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .directiveWithMocks('aDirectiveWithCompileFnInDdo')
+                        .build();
+
+                    inject(function($compile, $rootScope, mockableServiceAMock, mockableServiceBMock) {
+                        $compile('<div data-a-directive-with-compile-fn-in-ddo></div>')($rootScope.$new());
+
+                        expect(mockableServiceAMock.aMethod).toHaveBeenCalledWith();
+                        expect(mockableServiceBMock.aMethod).toHaveBeenCalledWith();
+                    });
+                });
+
+                it('should mock directive with a controller function', function() {
+                    originalModuleInstance.directive('aDirectiveWithController', [
+                            'nonMockableService', 'mockableServiceA', 'mockableServiceB',
+                            function(nonMockableService, mockableServiceA, mockableServiceB) {
+                                return {
+                                    controller: function () {
+                                        mockableServiceA.aMethod();
+                                        mockableServiceB.aMethod();
+                                    }
+                                };
+                            }]);
+
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .directiveWithMocks('aDirectiveWithController')
+                        .build();
+
+                    inject(function($compile, $rootScope, mockableServiceAMock, mockableServiceBMock) {
+                        $compile('<div data-a-directive-with-controller></div>')($rootScope.$new());
+
+                        expect(mockableServiceAMock.aMethod).toHaveBeenCalledWith();
+                        expect(mockableServiceBMock.aMethod).toHaveBeenCalledWith();
+                    });
+                });
+
+                it('should mock directive an overridden html anchor directive with a link function as its declaration', function() {
+                    originalModuleInstance.directive('a', [
+                                'nonMockableService', 'mockableServiceA', 'mockableServiceB',
+                                function(nonMockableService, mockableServiceA, mockableServiceB) {
+                                    return {
+                                        restrict: 'EA',
+                                        link: function() {
+                                            mockableServiceA.aMethod();
+                                            mockableServiceB.aMethod();
+                                        }
+                                    };
+                                }]);
+
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .directiveWithMocks('a')
+                        .build();
+
+                    inject(function($compile, $rootScope, mockableServiceAMock, mockableServiceBMock) {
+                        $compile('<a></a>')($rootScope.$new());
+
+                        expect(mockableServiceAMock.aMethod).toHaveBeenCalledWith();
+                        expect(mockableServiceBMock.aMethod).toHaveBeenCalledWith();
+                    });
+                });
+
+                it('should throw an exception when an directive is declared more than twice', function() {
+                    originalModuleInstance
+                        .directive('moreThanTwice',
+                            function() {
+                                return angular.noop;
+                            })
+                        .directive('moreThanTwice',
+                            function() {
+                                return angular.noop;
+                            })
+                        .directive('moreThanTwice',
+                            function() {
+                                return angular.noop;
+                            });
+
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .directiveWithMocks('moreThanTwice')
+                        .build();
+
+                    expect(function() {
+                        inject();
+                    }).toThrowModuleError(
+                            'Error: Could not determine unique component declaration for provider "$compileProvider": moreThanTwice');
+                });
             });
         });
 
@@ -1236,6 +1393,47 @@ describe('moduleBuilder service', function() {
             someMockableServiceMock.someMethod.and.returnValue('someValue');
 
             expect(serviceUsingMockableService.aMethod()).toBe('someValue');
+        });
+    });
+
+    it('should support an additional module', function() {
+        var serviceInstance = {};
+
+        angular.module('aModule', []);
+        angular.module('anAdditionalModule', [])
+            .value('serviceFromAdditionalModule', serviceInstance);
+
+        moduleBuilder.forModules('aModule', 'anAdditionalModule').build();
+
+        inject(function(serviceFromAdditionalModule) {
+            expect(serviceFromAdditionalModule).toBe(serviceInstance);
+        });
+    });
+
+    it('should include key - value pairs provided as an object', function() {
+        angular.module('aModule', []);
+        moduleBuilder.forModules('aModule', {aKey1: 'aValue1', aKey2: 'aValue2'}).build();
+
+        inject(function(aKey1, aKey2) {
+            expect(aKey1).toBe('aValue1');
+            expect(aKey2).toBe('aValue2');
+        });
+    });
+
+    it('should include provider registered in config fn', function() {
+        var serviceInstance = {};
+
+        angular.module('aModule', []);
+        moduleBuilder.forModules('aModule', function($provide) {
+                    $provide.provider('aProviderRegisteredInConfigFn', function() {
+                        this.$get = function() {
+                            return serviceInstance;
+                        };
+                    });
+                }).build();
+
+        inject(function(aProviderRegisteredInConfigFn) {
+            expect(aProviderRegisteredInConfigFn).toBe(serviceInstance);
         });
     });
 

@@ -2,7 +2,7 @@
 
 var ngModuleIntrospectorInjector = angular.injector(['ng', 'ngModuleIntrospector']);
 var moduleIntrospectorFactory = ngModuleIntrospectorInjector.get('moduleIntrospector');
-var moduleIntrospector = moduleIntrospectorFactory('ng');
+var moduleIntrospector = moduleIntrospectorFactory(['ng']);
 
 var original$QProviderConstructor = moduleIntrospector.getProviderDeclaration('$qProvider').rawDeclaration;
 var ngInjector = angular.injector(['ng']);
