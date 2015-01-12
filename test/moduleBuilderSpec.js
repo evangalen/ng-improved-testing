@@ -1052,6 +1052,28 @@ describe('moduleBuilder service', function() {
                     }).toThrowModuleError(
                             'Error: Could not determine unique component declaration for provider "$compileProvider": moreThanTwice');
                 });
+
+                it('should throw an exception when an directive is declared twice and none of them are built-in', function() {
+                    originalModuleInstance
+                        .directive('twice',
+                            function() {
+                                return angular.noop;
+                            })
+                        .directive('twice',
+                            function() {
+                                return angular.noop;
+                            });
+
+                    moduleBuilder.forModule(originalModuleInstance.name)
+                        .directiveWithMocks('twice')
+                        .build();
+
+                    expect(function() {
+                        inject();
+                    }).toThrowModuleError(
+                        'Error: Could not determine unique component declaration for provider "$compileProvider": twice');
+                });
+
             });
         });
 
