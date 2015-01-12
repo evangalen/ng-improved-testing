@@ -9,7 +9,7 @@ describe('jasmine', function() {
             it('should support usage as a constructor', function() {
                 var Constructor = jasmine.createSpy();
 
-                Constructor.andCallFake(function(value) {
+                Constructor.and.callFake(function(value) {
                     expect(this instanceof Constructor).toBe(true);
 
                     angular.extend(this, value || {});

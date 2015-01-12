@@ -41,27 +41,27 @@ describe('$injector service', function() {
 
     beforeEach(module('ng', function(_$provide_, _$filterProvider_, _$compileProvider_, _$controllerProvider_) {
         $provide = _$provide_;
-        spyOn($provide, 'constant').andCallThrough();
-        spyOn($provide, 'value').andCallThrough();
-        spyOn($provide, 'service').andCallThrough();
-        spyOn($provide, 'factory').andCallThrough();
-        spyOn($provide, 'provider').andCallThrough();
+        spyOn($provide, 'constant').and.callThrough();
+        spyOn($provide, 'value').and.callThrough();
+        spyOn($provide, 'service').and.callThrough();
+        spyOn($provide, 'factory').and.callThrough();
+        spyOn($provide, 'provider').and.callThrough();
 
         $filterProvider = _$filterProvider_;
-        spyOn($filterProvider, 'register').andCallThrough();
+        spyOn($filterProvider, 'register').and.callThrough();
 
         $compileProvider = _$compileProvider_;
-        spyOn($compileProvider, 'directive').andCallThrough();
+        spyOn($compileProvider, 'directive').and.callThrough();
 
         $controllerProvider = _$controllerProvider_;
-        spyOn($controllerProvider, 'register').andCallThrough();
+        spyOn($controllerProvider, 'register').and.callThrough();
     }, moduleInstance.name));
 
     afterEach(function() {
-        expect($provide.constant.calls.length).toBe(0);
-        expect($provide.value.calls.length).toBe(0);
-        expect($provide.service.calls.length).toBe(0);
-        expect($provide.provider.calls.length).toBe(0);
+        expect($provide.constant.calls.count()).toBe(0);
+        expect($provide.value.calls.count()).toBe(0);
+        expect($provide.service.calls.count()).toBe(0);
+        expect($provide.provider.calls.count()).toBe(0);
     });
 
 
@@ -88,8 +88,8 @@ describe('$injector service', function() {
 
             var invocationIndex = -1;
 
-            for (var i = 0; i < $provide.factory.calls.length; i += 1) {
-                if ($provide.factory.calls[i].args[0] === 'aDirectiveDirective') {
+            for (var i = 0; i < $provide.factory.calls.count(); i += 1) {
+                if ($provide.factory.calls.argsFor(i)[0] === 'aDirectiveDirective') {
                     expect(invocationIndex).toBe(-1);
 
                     invocationIndex = i;
@@ -97,7 +97,7 @@ describe('$injector service', function() {
             }
 
             expect(invocationIndex !== -1).toBe(true);
-            expect($provide.factory.calls[invocationIndex].args.length).toBe(2);
+            expect($provide.factory.calls.argsFor(invocationIndex).length).toBe(2);
 
             expect($injector.get('aDirectiveDirective')).toEqual([directive]);
         });

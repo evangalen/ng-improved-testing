@@ -69,8 +69,8 @@ describe('$q service', function() {
                 var thenChainedSuccessCallback1 = jasmine.createSpy();
                 var thenChainedSuccessCallback2 = jasmine.createSpy();
 
-                thenSuccessCallback1.andReturn('aPossibleModifiedValue');
-                thenSuccessCallback2.andReturn('anotherPossibleModifiedValue');
+                thenSuccessCallback1.and.returnValue('aPossibleModifiedValue');
+                thenSuccessCallback2.and.returnValue('anotherPossibleModifiedValue');
 
                 deferred1.promise.then(thenSuccessCallback1).then(thenChainedSuccessCallback1);
                 deferred2.promise.then(thenSuccessCallback2).then(thenChainedSuccessCallback2);

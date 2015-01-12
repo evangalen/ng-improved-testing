@@ -29,7 +29,7 @@ describe('moduleBuilder service', function() {
     var AServiceConstructor = jasmine.createSpy();
 
     /** @const */
-    var aServiceFactoryFactory = jasmine.createSpy().andCallFake(function() {
+    var aServiceFactoryFactory = jasmine.createSpy().and.callFake(function() {
         return {};
     });
 
@@ -47,12 +47,12 @@ describe('moduleBuilder service', function() {
     /**
      * @const
      */
-    var aDirectiveFactory = jasmine.createSpy().andCallFake(function() {
+    var aDirectiveFactory = jasmine.createSpy().and.callFake(function() {
         return aDirectiveLinkFn;
     });
 
     /** @const */
-    var $getProviderFactory = jasmine.createSpy().andCallFake(function() {
+    var $getProviderFactory = jasmine.createSpy().and.callFake(function() {
         return {};
     });
 
@@ -62,7 +62,7 @@ describe('moduleBuilder service', function() {
     };
 
     /** @const */
-    var aFilterFactory = jasmine.createSpy().andCallFake(function() {
+    var aFilterFactory = jasmine.createSpy().and.callFake(function() {
         return aFilter;
     });
 
@@ -70,7 +70,7 @@ describe('moduleBuilder service', function() {
     var anAnimationEnterMethod = jasmine.createSpy();
 
     /** @const */
-    var anAnimationFactory = jasmine.createSpy().andCallFake(function() {
+    var anAnimationFactory = jasmine.createSpy().and.callFake(function() {
         return {
             enter: anAnimationEnterMethod
         };
@@ -123,49 +123,52 @@ describe('moduleBuilder service', function() {
 
 
     beforeEach(function(){
-        this.addMatchers({
-            toThrowModuleError: function(expectedWrappedMessage) {
-                var result = false;
+        jasmine.addMatchers({
+            toThrowModuleError: function (util, customEqualityTesters) {
+                return {
+                    compare: function(actual, expectedWrappedMessage) {
+                        var result = {};
 
-                if (typeof this.actual !== 'function') {
-                    throw new Error('Actual is not a function');
-                } else if (this.isNot) {
-                    throw new Error('Using ".not" is not supported with this matcher');
-                }
+                        if (typeof actual !== 'function') {
+                            throw new Error('Actual is not a function');
+                        //} else if (this.isNot) {
+                        //    throw new Error('Using ".not" is not supported with this matcher');
+                        }
 
-                var exception;
+                        var exception;
 
-                try {
-                    this.actual();
-                } catch (e) {
-                    exception = e;
+                        try {
+                            actual();
+                        } catch (e) {
+                            exception = e;
 
-                    var isError = Object.prototype.toString.call(e) === '[object Error]';
-                    if (!isError) {
-                        this.message = function() {
-                            return 'Excepted an exception of type Error:' + e;
-                        };
+                            var isError = Object.prototype.toString.call(e) === '[object Error]';
+                            if (!isError) {
+                                result.pass = false;
+                                result.message = 'Excepted an exception of type Error:' + e;
+                            }
+
+                            var actualErrorMessage = e.message;
+
+                            var errorMessageRegExp =
+                                /^\[\$injector:modulerr\]\ Failed to instantiate module .* due to:\n(.*)\n.*/;
+
+                            var regExpExecResult = errorMessageRegExp.exec(actualErrorMessage);
+
+                            result.pass = regExpExecResult &&
+                                    util.equals(regExpExecResult[1], expectedWrappedMessage, customEqualityTesters);
+                            result.message = 'Expected function to throw ' + expectedWrappedMessage + ', but it threw ' +
+                                    (regExpExecResult ? regExpExecResult[1] : (exception && exception.message));
+                        }
+
+
+                        return result;
                     }
-
-                    var actualErrorMessage = e.message;
-
-                    var errorMessageRegExp =
-                        /^\[\$injector:modulerr\]\ Failed to instantiate module .* due to:\n(.*)\n.*/;
-
-                    var regExpExecResult = errorMessageRegExp.exec(actualErrorMessage);
-
-                    result = regExpExecResult && regExpExecResult[1] === expectedWrappedMessage;
-
-                }
-
-                this.message = function() {
-                    return 'Expected function to throw ' + expectedWrappedMessage + ', but it threw ' +
-                            (exception && exception.message);
                 };
-
-                return result;
             }
         });
+
+
     });
 
 
@@ -174,14 +177,14 @@ describe('moduleBuilder service', function() {
         var originalModuleIntrospector = ngModuleIntrospectorInjector.get('moduleIntrospector');
 
         var ngImprovedTestingInjector = angular.injector(['ng', 'ngImprovedTesting.internal.moduleBuilder', function($provide) {
-            var spiedModuleIntrospector = jasmine.createSpy().andCallFake(function() {
+            var spiedModuleIntrospector = jasmine.createSpy().and.callFake(function() {
                 var result = originalModuleIntrospector.apply(this, arguments);
 
                 moduleIntrospectorInstance = result;
 
                 for (var propertyName in result) {
                     if (result.hasOwnProperty(propertyName) && angular.isFunction(result[propertyName])) {
-                        spyOn(result, propertyName).andCallThrough();
+                        spyOn(result, propertyName).and.callThrough();
                     }
                 }
 
@@ -194,7 +197,7 @@ describe('moduleBuilder service', function() {
         moduleBuilder = ngImprovedTestingInjector.get('moduleBuilder');
 
         var originalInjectorFn = angular.injector;
-        spyOn(angular, 'injector').andCallFake(function() {
+        spyOn(angular, 'injector').and.callFake(function() {
             var result = originalInjectorFn.apply(this, arguments);
 
             createdInjector = result;
@@ -252,23 +255,23 @@ describe('moduleBuilder service', function() {
             prependedDependenciesCount = prependedDependenciesCount || 0;
 
             expect(declaration).toHaveBeenCalled();
-            expect(declaration.mostRecentCall.args.length).toBe(3 + prependedDependenciesCount);
-            expect(declaration.mostRecentCall.args[prependedDependenciesCount + 0]).toBe(nonMockableService);
+            expect(declaration.calls.mostRecent().args.length).toBe(3 + prependedDependenciesCount);
+            expect(declaration.calls.mostRecent().args[prependedDependenciesCount + 0]).toBe(nonMockableService);
 
             if (expectMockableServiceAMocked) {
-                expect(declaration.mostRecentCall.args[prependedDependenciesCount + 1]).not.toBe(mockableServiceA);
-                expect(jasmine.isSpy(declaration.mostRecentCall.args[prependedDependenciesCount + 1].aMethod))
+                expect(declaration.calls.mostRecent().args[prependedDependenciesCount + 1]).not.toBe(mockableServiceA);
+                expect(jasmine.isSpy(declaration.calls.mostRecent().args[prependedDependenciesCount + 1].aMethod))
                     .toBe(true);
             } else {
-                expect(declaration.mostRecentCall.args[prependedDependenciesCount + 1]).toBe(mockableServiceA);
+                expect(declaration.calls.mostRecent().args[prependedDependenciesCount + 1]).toBe(mockableServiceA);
             }
 
             if (expectMockableServiceBMocked) {
-                expect(declaration.mostRecentCall.args[prependedDependenciesCount + 2]).not.toBe(mockableServiceB);
-                expect(jasmine.isSpy(declaration.mostRecentCall.args[prependedDependenciesCount + 2].aMethod))
+                expect(declaration.calls.mostRecent().args[prependedDependenciesCount + 2]).not.toBe(mockableServiceB);
+                expect(jasmine.isSpy(declaration.calls.mostRecent().args[prependedDependenciesCount + 2].aMethod))
                     .toBe(true);
             } else {
-                expect(declaration.mostRecentCall.args[prependedDependenciesCount + 2]).toBe(mockableServiceB);
+                expect(declaration.calls.mostRecent().args[prependedDependenciesCount + 2]).toBe(mockableServiceB);
             }
         }
 
@@ -750,7 +753,7 @@ describe('moduleBuilder service', function() {
                 it('should mock all mockable dependencies', function() {
                     var expectedScopeProperty = {};
 
-                    AControllerConstructor.andCallFake(function($scope) {
+                    AControllerConstructor.and.callFake(function($scope) {
                         $scope.aProperty = expectedScopeProperty;
                     });
 
@@ -763,7 +766,7 @@ describe('moduleBuilder service', function() {
                         $controller('aController', {$scope: $scope});
 
                         assertMockableDependenciesWereMocked(AControllerConstructor, true, true, 1);
-                        expect(AControllerConstructor.mostRecentCall.args[0]).toBe($scope);
+                        expect(AControllerConstructor.calls.mostRecent().args[0]).toBe($scope);
 
                         expect($scope.aProperty).toBe(expectedScopeProperty);
                     });
@@ -787,7 +790,7 @@ describe('moduleBuilder service', function() {
                 it('only a explicitly specified dependency should be mocked when its mockable', function() {
                     var expectedScopeProperty = {};
 
-                    AControllerConstructor.andCallFake(function($scope) {
+                    AControllerConstructor.and.callFake(function($scope) {
                         $scope.aProperty = expectedScopeProperty;
                     });
 
@@ -800,7 +803,7 @@ describe('moduleBuilder service', function() {
                         $controller('aController', {$scope: $scope});
 
                         assertMockableDependenciesWereMocked(AControllerConstructor, false, true, 1);
-                        expect(AControllerConstructor.mostRecentCall.args[0]).toBe($scope);
+                        expect(AControllerConstructor.calls.mostRecent().args[0]).toBe($scope);
 
                         expect($scope.aProperty).toBe(expectedScopeProperty);
                     });
@@ -834,7 +837,7 @@ describe('moduleBuilder service', function() {
                 it('only a explicitly specified dependency should be mocked when its mockable', function() {
                     var expectedScopeProperty = {};
 
-                    AControllerConstructor.andCallFake(function($scope) {
+                    AControllerConstructor.and.callFake(function($scope) {
                         $scope.aProperty = expectedScopeProperty;
                     });
 
@@ -847,7 +850,7 @@ describe('moduleBuilder service', function() {
                         $controller('aController', {$scope: $scope});
 
                         assertMockableDependenciesWereMocked(AControllerConstructor, false, true, 1);
-                        expect(AControllerConstructor.mostRecentCall.args[0]).toBe($scope);
+                        expect(AControllerConstructor.calls.mostRecent().args[0]).toBe($scope);
 
                         expect($scope.aProperty).toBe(expectedScopeProperty);
                     });
@@ -1091,12 +1094,12 @@ describe('moduleBuilder service', function() {
                 expect(createdInjector).toBeDefined();
 
                 expect(angular.injector).toHaveBeenCalled();
-                expect(angular.injector.mostRecentCall.args.length).toBe(1);
-                expect(angular.isArray(angular.injector.mostRecentCall.args[0])).toBe(true);
-                expect(angular.injector.mostRecentCall.args[0].length).toBe(3);
-                expect(angular.injector.mostRecentCall.args[0][0]).toBe('ng');
-                expect(angular.injector.mostRecentCall.args[0][1]).toBe('ngMock');
-                expect(angular.injector.mostRecentCall.args[0][2]).toBe(originalModuleInstance.name);
+                expect(angular.injector.calls.mostRecent().args.length).toBe(1);
+                expect(angular.isArray(angular.injector.calls.mostRecent().args[0])).toBe(true);
+                expect(angular.injector.calls.mostRecent().args[0].length).toBe(3);
+                expect(angular.injector.calls.mostRecent().args[0][0]).toBe('ng');
+                expect(angular.injector.calls.mostRecent().args[0][1]).toBe('ngMock');
+                expect(angular.injector.calls.mostRecent().args[0][2]).toBe(originalModuleInstance.name);
             });
 
             it('should create a module introspector', function() {
@@ -1137,7 +1140,7 @@ describe('moduleBuilder service', function() {
     describe('should allow mocking dependencies which are added during AngularJS bootstrapping', function() {
 
         it('like the $log service', function() {
-            var $logUsingServiceFactoryFactory = jasmine.createSpy().andCallFake(function($log) {
+            var $logUsingServiceFactoryFactory = jasmine.createSpy().and.callFake(function($log) {
                 return {
                     writeToLog: function(message) {
                         return $log.log(message);
@@ -1164,7 +1167,7 @@ describe('moduleBuilder service', function() {
         it('like the $location service (not provided by "ngMock" module of angular 1.0)', function() {
 
 
-            var $locationUsingServiceFactoryFactory = jasmine.createSpy().andCallFake(function($location) {
+            var $locationUsingServiceFactoryFactory = jasmine.createSpy().and.callFake(function($location) {
                 return {
                     completeUrl: function() {
                         return $location.absUrl();
@@ -1184,7 +1187,7 @@ describe('moduleBuilder service', function() {
             inject(function($locationUsingService, $locationMock) {
                 expect($locationMock).not.toBeNull();
 
-                $locationMock.absUrl.andReturn('http://aComplete/url');
+                $locationMock.absUrl.and.returnValue('http://aComplete/url');
 
                 expect($locationUsingService.completeUrl()).toBe('http://aComplete/url');
             });
@@ -1230,7 +1233,7 @@ describe('moduleBuilder service', function() {
             .build();
 
         inject(function(serviceUsingMockableService, someMockableServiceMock) {
-            someMockableServiceMock.someMethod.andReturn('someValue');
+            someMockableServiceMock.someMethod.and.returnValue('someValue');
 
             expect(serviceUsingMockableService.aMethod()).toBe('someValue');
         });
