@@ -50,27 +50,20 @@ module.exports = function(grunt) {
                     'src/**/*.js': ['coverage']
                 }
             },
-            angular_TMP: {
-                configFile: 'karma-angular-TMP.conf.js',
+            angular_1_2: {
+                configFile: 'karma-angular-1.2.conf.js',
                 coverageReporter: {
                     type: 'lcov',
-                    dir: 'coverage/angular-TMP'
+                    dir: 'coverage/angular-1.2'
                 }
             },
-            //angular_1_2: {
-            //    configFile: 'karma-angular-1.2.conf.js',
-            //    coverageReporter: {
-            //        type: 'lcov',
-            //        dir: 'coverage/angular-1.2'
-            //    }
-            //},
-            //angular_1_3: {
-            //    configFile: 'karma-angular-1.3.conf.js',
-            //    coverageReporter: {
-            //        type: 'lcov',
-            //        dir: 'coverage/angular-1.3'
-            //    }
-            //}
+            angular_1_3: {
+                configFile: 'karma-angular-1.3.conf.js',
+                coverageReporter: {
+                    type: 'lcov',
+                    dir: 'coverage/angular-1.3'
+                }
+            }
         },
         jshint: {
             files: ['*.js', 'src/**/*.js', 'test/**/*.js'],
