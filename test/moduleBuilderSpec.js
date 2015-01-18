@@ -4,12 +4,6 @@ describe('moduleBuilder service', function() {
 
     //TODO: add spec to test that:
     // - "ngImprovedTesting" is added to the modules requires of the generated / created module
-    // - expection is thrown when animations are used by no "ngAnimate" requires exist
-    // - module config fn call be added `withConfig`
-    // - only the whole original module is included when `includeAll()` was invoked
-    // - only the components included using the ModuleBuilder (and its dependencies) will be added created module
-    // - "filterAsIs", "controllerAsIs", "directiveAsIs" and "animationAsIs" does nothing when `includeAll()` was
-    //   invoked besides logging a warning; "serviceAsIs" is already 100% tests this situation
 
 
     /** @const */
@@ -131,8 +125,6 @@ describe('moduleBuilder service', function() {
 
                         if (typeof actual !== 'function') {
                             throw new Error('Actual is not a function');
-                        //} else if (this.isNot) {
-                        //    throw new Error('Using ".not" is not supported with this matcher');
                         }
 
                         var exception;
@@ -1121,8 +1113,6 @@ describe('moduleBuilder service', function() {
                         inject();
                     }).toThrowModuleError('Could not mock the dependency explicitly asked to mock: nonMockableService');
                 });
-
-                //TODO: add tests to test that a directive with controller and / or compile / link is using mocks (also in its controller)
             });
         });
 
@@ -1184,8 +1174,6 @@ describe('moduleBuilder service', function() {
 
                     testAnimationWithMocks(true, true);
                 });
-
-                //TODO: add tests to test that a directive with controller and / or compile / link is using mocks (also in its controller)
             });
         });
 
