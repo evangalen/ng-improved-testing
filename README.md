@@ -12,6 +12,8 @@ Changes
 0.3.0
  - The ModuleBuilder now includes the whole original module;
    Since the whole module is now includes there is no need for any of the "...AsIs" methods (i.e. "serviceAsIs") and therefor all off them hav been removed.
+ - Introduced the a new static `ModuleBuilder.forModules` method with a variable argument and the same possible argument types as [angular.mock.module](https://docs.angularjs.org/api/ngMock/function/angular.mock.module).
+ - Deprecated the existing static `ModuleBuilder.forModule` method in favor of `ModuleBuilder.forModules`.
  - The "angular.mock.inject" functionality has been modified to disallow injecting the original service instead of its mocked counterpart. This to prevent mistakingly injecting the original (non-mocked) service in your tests.
  - Fixed #16 (Some of the "...MocksFor" and "...MocksExcept" don't support variable arguments bug)
  - Fixed #15 ($httpBackend doesn't work with mocks enabled bug)
