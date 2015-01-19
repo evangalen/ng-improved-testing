@@ -12,6 +12,11 @@ Changes
 0.3.0
  - The ModuleBuilder now includes the whole original module;
    Since the whole module is now includes there is no need for any of the "...AsIs" methods (i.e. "serviceAsIs") and therefor all off them hav been removed.
+ - The "angular.mock.inject" functionality has been modified to disallow injecting the original service instead of its mocked counterpart. This to prevent mistakingly injecting the original (non-mocked) service in your tests.
+ - Fixed #16 (Some of the "...MocksFor" and "...MocksExcept" don't support variable arguments bug)
+ - Fixed #15 ($httpBackend doesn't work with mocks enabled bug)
+ - Fixed #14 (Using "directiveWithMocks..." should only be allowed when directive is registered once or only once overriden a built-in one enhancement)
+ - Fixed #13 (Using "...WithMocks..." should not be allowed on built-in components)
  - Fixed #8 (MockBuilder doesn't correctly handle components declared in inherited modules)
  - Fixed #11 (Using ModuleBuilder.forModule('app') on a module which uses $location breaks the tests)
  - Fixed #12 (Prevent duplicate directive when mocking the injected services of a directive enhancement)
