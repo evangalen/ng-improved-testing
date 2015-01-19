@@ -46,7 +46,12 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
         /** @type {Object.<ModuleBuilder.ToBeIncludedModuleComponent>} */
         var toBeIncludedModuleComponents = [];
 
-        //TODO: comment
+        /**
+         * Includes a service that replaces all of its dependencies with mock implementations.
+         *
+         * @param {string} serviceName the name of the service to be registered
+         * @returns {moduleBuilderFactory.ModuleBuilder} the module builder instance
+         */
         this.serviceWithMocks = function(serviceName) {
             includeProviderComponent('$provide', serviceName, 'withMocks');
             return this;
@@ -66,14 +71,26 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
             return this;
         };
 
-        //TODO: comment
+        /**
+         * Includes a service that replaces its dependencies with mock implementations except those specified in
+         * <em>notToBeMockedDependencies</em>.
+         *
+         * @param {string} serviceName the name of the service to be registered
+         * @param {...string} notToBeMockedDependencies dependencies that should "not" be replaced with a mock implementation
+         * @returns {moduleBuilderFactory.ModuleBuilder} the module builder instance
+         */
         this.serviceWithMocksExcept = function(serviceName, notToBeMockedDependencies) {
             notToBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
             includeProviderComponent('$provide', serviceName, 'withMocks', 'except', notToBeMockedDependencies);
             return this;
         };
 
-        //TODO: comment
+        /**
+         * Includes a filter that replaces all of its dependencies with mock implementations.
+         *
+         * @param {string} filterName name of the filter to be included in the to be build module
+         * @returns {moduleBuilderFactory.ModuleBuilder} the module builder instance
+         */
         this.filterWithMocks = function(filterName) {
             includeProviderComponent('$filterProvider', filterName, 'withMocks');
             return this;
@@ -88,37 +105,47 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
          * @returns {moduleBuilderFactory.ModuleBuilder} the module builder instance
          */
         this.filterWithMocksFor = function(filterName, toBeMockedDependencies) {
+            toBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
             includeProviderComponent('$filterProvider', filterName, 'withMocks', 'for', toBeMockedDependencies);
             return this;
         };
 
-        //TODO: comment
+        /**
+         * Includes a filter that replaces its dependencies with mock implementations except those specified in
+         * <em>notToBeMockedDependencies</em>.
+         *
+         * @param {string} filterName name of the filter to be included in the to be build module
+         * @param {...string} notToBeMockedDependencies dependencies that should "not" be replaced with a mock implementation
+         * @returns {moduleBuilderFactory.ModuleBuilder} the module builder instance
+         */
         this.filterWithMocksExcept = function(filterName, notToBeMockedDependencies) {
+            notToBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
             includeProviderComponent('$filterProvider', filterName, 'withMocks', 'except', notToBeMockedDependencies);
             return this;
         };
 
         //TODO: puts entry to the mockedFilters hash causing the $filter to return the mocked filter
         //  (instead of the original one).
-        //TODO: decide if we only want $filter to work for explicitly registered components, which could in this case
-        //  also be `...AsIs` components, (which could possible retrieve $filter using $injector.get('$filter')
-        //TODO: decide if we want to expose filters with '...FilterMock' (possibly) together with '...Mock'
-        //TODO: should we support mocking filters using '...WithMocks', '...WithMocksFor' and ''...WithMocksExcept' in
-        //  case the filter is used as an injected service through the '...Filter' name.
         //TODO: should be using using '...WithMocks', '...WithMocksFor' and ''...WithMocksExcept' together with
         //  'filterMock' the mock always be mocked? (i.e. also when nog included in '...WithMocks')
 //        this.filterMock = function(filterName) {
 //            // include a filter that can be found using "...FilterMock" (or not ?!?) and also through $filter('...')
 //        };
 
-        //TODO: comment
+        /**
+         * Includes a controller that replaces all of its dependencies with mock implementations.
+         *
+         * @param {string} controllerName name of the controller to be included in the to be build module
+         * @returns {moduleBuilderFactory.ModuleBuilder}
+         */
         this.controllerWithMocks = function(controllerName) {
             includeProviderComponent('$controllerProvider', controllerName, 'withMocks');
             return this;
         };
 
         /**
-         * Includes a controller that uses mocked service dependencies (instead of actual services) in the module.
+         * Includes a controller that replaces the dependencies specified in <em>toBeMockedDependencies</em> with mock
+         * implementations.
          *
          * @param {string} controllerName name of the controller to be included in the to be build module
          * @param {...string} toBeMockedDependencies dependencies to be replaced with a mock implementation
@@ -130,32 +157,42 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
             return this;
         };
 
-        //TODO: comment
-        this.controllerWithMocksExcept = function(controllerName, toBeMockedDependencies) {
-            includeProviderComponent('$controllerProvider', controllerName, 'withMocks', 'except', toBeMockedDependencies);
+        /**
+         * Includes a controller that replaces its dependencies with mock implementations except those specified in
+         * <em>notToBeMockedDependencies</em>.
+         *
+         * @param {string} controllerName name of the controller to be included in the to be build module
+         * @param {...string} notToBeMockedDependencies dependencies that should "not" be replaced with a mock implementation
+         * @returns {moduleBuilderFactory.ModuleBuilder}
+         */
+        this.controllerWithMocksExcept = function(controllerName, notToBeMockedDependencies) {
+            notToBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
+            includeProviderComponent('$controllerProvider', controllerName, 'withMocks', 'except', notToBeMockedDependencies);
             return this;
         };
 
         //TODO: puts entry to the mockedControllers hash causing the $controller to use the mocked controller
         //  (instead of the original one).
-        //TODO: decide if we only want $controller to work for explicitly registered components, which could in this
-        //  case also be `...AsIs` components, (which could possible retrieve $controller using
-        //  $injector.get('$controller')
-        //      - same should also apply when using `inject(...)` in your tests
 //        this.controllerMock = function(controllerName, controllerMockConfigurator) {
 //            // include a mocked controller; should support both "controller as" as traditional $scope-style
 //            //  TODO: how should I mock a $scope-style controller
 //            //  TODO: make sure that controllerMockConfigurator is optional
 //        };
 
-        //TODO: comment
+        /**
+         * Includes a directive that replaces all of its dependencies with mock implementations.
+         *
+         * @param {string} directiveName name of the controller to be included in the to be build module
+         * @returns {moduleBuilderFactory.ModuleBuilder}
+         */
         this.directiveWithMocks = function(directiveName) {
             includeProviderComponent('$compileProvider', directiveName, 'withMocks');
             return this;
         };
 
         /**
-         * Includes a directive that uses mocked service dependencies (instead of actual services) in the module.
+         * Includes a directive that replaces the dependencies specified in <em>toBeMockedDependencies</em> with mock
+         * implementations.
          *
          * @param {string} directiveName name of the controller to be included in the to be build module
          * @param {...string} toBeMockedDependencies dependencies to be replaced with a mock implementation
@@ -167,17 +204,22 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
             return this;
         };
 
-        //TODO: comment
-        this.directiveWithMocksExcept = function(directiveName, toBeMockedDependencies) {
-            includeProviderComponent('$compileProvider', directiveName, 'withMocks', 'except', toBeMockedDependencies);
+        /**
+         * Includes a directive that replaces its dependencies with mock implementations except those specified in
+         * <em>notToBeMockedDependencies</em>.
+         *
+         * @param {string} directiveName name of the controller to be included in the to be build module
+         * @param {...string} notToBeMockedDependencies dependencies that should "not" be replaced with a mock implementation
+         * @returns {moduleBuilderFactory.ModuleBuilder}
+         */
+        this.directiveWithMocksExcept = function(directiveName, notToBeMockedDependencies) {
+            notToBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
+            includeProviderComponent('$compileProvider', directiveName, 'withMocks', 'except', notToBeMockedDependencies);
             return this;
         };
 
         //TODO: puts entry to the mockedDirectives hash causing the $compile to use the mocked directive
         //  (instead of the original one).
-        //TODO: decide if we only want $compile to work for explicitly registered components, which could in this
-        //  case also be `...AsIs` components, (which could possible retrieve $compile using $injector.get('$compile')
-        //      - same should also apply when using `inject(...)` in your tests
 //        this.directiveMock = function(directiveName, directiveMockConfigurator) {
 //            // include a directive with a mocked controller but without any "link" or "compile" method;
 //            // should only work if there is exactly "one" directive with the provided directiveName that has a
@@ -185,14 +227,19 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
 //            //  TODO: make sure that directiveMockConfigurator is optional
 //        };
 
-        //TODO: comment
+        /**
+         * Includes a animation that replaces all of its dependencies with mock implementations.
+         *
+         * @param {string} animationName name of the controller to be included in the to be build module
+         * @returns {moduleBuilderFactory.ModuleBuilder}
+         */
         this.animationWithMocks = function(animationName) {
             includeProviderComponent('$animateProvider', animationName, 'withMocks');
             return this;
         };
 
         /**
-         * Includes a animation that uses mocked service dependencies (instead of actual services) in the module.
+         * Includes a animation that replaces the dependencies specified in <em>toBeMockedDependencies</em> with mock implementations.
          *
          * @param {string} animationName name of the controller to be included in the to be build module
          * @param {...string} toBeMockedDependencies dependencies to be replaced with a mock implementation
@@ -204,15 +251,22 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
             return this;
         };
 
-        //TODO: comment
-        this.animationWithMocksExcept = function(animationName, toBeMockedDependencies) {
-            includeProviderComponent('$animateProvider', animationName, 'withMocks', 'except', toBeMockedDependencies);
+        /**
+         * Includes a animation that replaces its dependencies with mock implementations except those specified in
+         * <em>notToBeMockedDependencies</em>.
+         *
+         * @param {string} animationName name of the controller to be included in the to be build module
+         * @param {...string} notToBeMockedDependencies dependencies that should "not" be replaced with a mock implementation
+         * @returns {moduleBuilderFactory.ModuleBuilder}
+         */
+        this.animationWithMocksExcept = function(animationName, notToBeMockedDependencies) {
+            notToBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
+            includeProviderComponent('$animateProvider', animationName, 'withMocks', 'except', notToBeMockedDependencies);
             return this;
         };
 
         /**
-         * Builds ...
-         * @returns {Function}
+         * Builds the AngularJS module by invoking `angular.mock.module`.
          */
         this.build = function() {
 
