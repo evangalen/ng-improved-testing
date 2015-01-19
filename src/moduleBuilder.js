@@ -474,6 +474,8 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
                         });
                     }
                 });
+
+                providers.$provide.value('ngImprovedTestingMockedServices', mockedServices);
             });
 
             return angular.mock.module.apply(undefined, [].concat(modules).concat([populateModuleComponents, 'ngImprovedTesting']));

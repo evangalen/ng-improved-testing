@@ -14,6 +14,7 @@ module.exports = function(config) {
             'src/config.js',
             'src/mockCreator.js',
             'src/moduleBuilder.js',
+            'src/mockInject.js',
             'src/$q.js',
             'src/exports.js',
             'bower_components/angular-animation-1.3/angular-animate.js',
