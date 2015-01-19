@@ -492,6 +492,7 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
          * @name moduleBuilder#forModule
          * @param {string|Function|Object} module
          * @returns {moduleBuilderFactory.ModuleBuilder}
+         * @deprecated use {@link #forModules} instead
          */
         forModule: function(module) {
             return new ModuleBuilder([module]);
