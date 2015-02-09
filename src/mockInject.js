@@ -19,9 +19,10 @@ window.inject = angular.mock.inject = function() {
         var wrappedBlockFn = function($injector) {
             if ($injector.has('ngImprovedTestingMockedServices')) {
                 var mockedServices = $injector.get('ngImprovedTestingMockedServices');
+                var nonMockedServices = $injector.get('ngImprovedTestingNonMockedServices');
 
                 angular.forEach(injectedServices, function(injectedService) {
-                    if (mockedServices.hasOwnProperty(injectedService)) {
+                    if (mockedServices.hasOwnProperty(injectedService) && !nonMockedServices.hasOwnProperty(injectedService)) {
                         throw 'Service has a mock and therefore is not allowed to be injected: ' + injectedService;
                     }
                 });

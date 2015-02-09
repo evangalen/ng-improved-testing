@@ -333,6 +333,8 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
 
                             if (toBeMocked) {
                                 mockedServices[injectedService] = injectedServiceInstance;
+                            } else {
+                                nonMockedServices[injectedService] = injectedServiceInstance;
                             }
 
                             annotatedDeclaration.push(injectedService + (toBeMocked ? 'Mock' : ''));
@@ -409,6 +411,9 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
 
 
                 /** @type Object.<Object> */
+                var nonMockedServices = {};
+
+                /** @type Object.<Object> */
                 var mockedServices = {};
 
                 /**
@@ -475,6 +480,7 @@ function moduleBuilderFactory(moduleIntrospector, mockCreator) {
                     }
                 });
 
+                providers.$provide.value('ngImprovedTestingNonMockedServices', nonMockedServices);
                 providers.$provide.value('ngImprovedTestingMockedServices', mockedServices);
             });
 
