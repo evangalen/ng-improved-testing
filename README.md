@@ -9,6 +9,20 @@ For more information about:
 
 Changes
 -------
+0.3.0
+ - The ModuleBuilder now includes the whole original module;
+   Since the whole module is now includes there is no need for any of the "...AsIs" methods (i.e. "serviceAsIs") and therefor all off them hav been removed.
+ - Introduced the a new static `ModuleBuilder.forModules` method with a variable argument and the same possible argument types as [angular.mock.module](https://docs.angularjs.org/api/ngMock/function/angular.mock.module).
+ - Deprecated the existing static `ModuleBuilder.forModule` method in favor of `ModuleBuilder.forModules`.
+ - The "angular.mock.inject" functionality has been modified to disallow injecting the original service instead of its mocked counterpart. This to prevent mistakingly injecting the original (non-mocked) service in your tests.
+ - Fixed #16 (Some of the "...MocksFor" and "...MocksExcept" don't support variable arguments bug)
+ - Fixed #15 ($httpBackend doesn't work with mocks enabled bug)
+ - Fixed #14 (Using "directiveWithMocks..." should only be allowed when directive is registered once or only once overriden a built-in one enhancement)
+ - Fixed #13 (Using "...WithMocks..." should not be allowed on built-in components)
+ - Fixed #8 (MockBuilder doesn't correctly handle components declared in inherited modules)
+ - Fixed #11 (Using ModuleBuilder.forModule('app') on a module which uses $location breaks the tests)
+ - Fixed #12 (Prevent duplicate directive when mocking the injected services of a directive enhancement)
+
 0.2.3
  - Fixed #9 (ModuleBuilder doesn't support angular modules declared in .js file loading after .js file of Jasmine spec)
 
@@ -41,3 +55,9 @@ Changes
  - Support for testing directives with mocked dependencies
 
 0.1.0 Initial release
+
+Bower
+-----
+You can easily install and add it to an existing project using the following command:
+
+    bower install ng-improved-testing --save-dev

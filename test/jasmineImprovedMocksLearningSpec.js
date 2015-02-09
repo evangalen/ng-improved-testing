@@ -14,7 +14,7 @@ describe('jasmine improved mocks learning', function() {
             this.aPrimitive = 'originalValue';
 
             // create a spy one
-            spyOn(this, 'aMethod').andCallFake(function() {
+            spyOn(this, 'aMethod').and.callFake(function() {
                 this.aPrimitive = 'modifiedValue';
             });
         }
@@ -66,7 +66,7 @@ describe('jasmine improved mocks learning', function() {
         Mock.prototype.constructor = Mock;
 
         // make a spy of each method added in the prototype of the constructor
-        spyOn(Mock.prototype, 'methodAddedOnPrototype').andCallFake(function() {
+        spyOn(Mock.prototype, 'methodAddedOnPrototype').and.callFake(function() {
             this.aPrimitive = 'modifiedValue';
         });
 
@@ -112,7 +112,7 @@ describe('jasmine improved mocks learning', function() {
         Mock.prototype.constructor = Mock;
 
         // make a spy of each method added in the prototype of the constructor
-        spyOn(Mock.prototype, 'methodAddedOnPrototype').andCallFake(function() {
+        spyOn(Mock.prototype, 'methodAddedOnPrototype').and.callFake(function() {
             this.aPrimitive = 'modifiedValue';
         });
 
@@ -133,11 +133,11 @@ describe('jasmine improved mocks learning', function() {
         var SpyConstructor = jasmine.createSpy();
         SpyConstructor.prototype = Object.create(PossibleConstructor.prototype, {constructor: PossibleConstructor});
 
-        SpyConstructor.andReturn(42);
+        SpyConstructor.and.returnValue(42);
 
         expect(SpyConstructor.call(undefined)).toBe(42);
 
-        SpyConstructor.reset();
+        SpyConstructor.calls.reset();
 
         expect(new SpyConstructor() instanceof PossibleConstructor).toBe(true);
     });
@@ -149,11 +149,11 @@ describe('jasmine improved mocks learning', function() {
 
     beforeEach(module(function(_$provide_, _$controllerProvider_) {
         $provide = _$provide_;
-        spyOn($provide, 'factory').andCallThrough();
-        spyOn($provide, 'service').andCallThrough();
+        spyOn($provide, 'factory').and.callThrough();
+        spyOn($provide, 'service').and.callThrough();
 
         $controllerProvider = _$controllerProvider_;
-        spyOn($controllerProvider, 'register').andCallThrough();
+        spyOn($controllerProvider, 'register').and.callThrough();
     }, 'ngImprovedTesting'));
 
 

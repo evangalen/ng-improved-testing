@@ -1,14 +1,14 @@
 'use strict';
 
-var numberOfBuildModules = 0;
 
 // @ngInject
-function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
+function moduleBuilderFactory(moduleIntrospector, mockCreator) {
 
     /**
      * @constructor
+     * @param {Array.<(string|Function|Object)>} modules
      */
-    function ModuleBuilder(moduleName) {
+    function ModuleBuilder(modules) {
 
         /**
          * @param {string} providerName
@@ -46,7 +46,12 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
         /** @type {Object.<ModuleBuilder.ToBeIncludedModuleComponent>} */
         var toBeIncludedModuleComponents = [];
 
-        //TODO: comment
+        /**
+         * Includes a service that replaces all of its dependencies with mock implementations.
+         *
+         * @param {string} serviceName the name of the service to be registered
+         * @returns {moduleBuilderFactory.ModuleBuilder} the module builder instance
+         */
         this.serviceWithMocks = function(serviceName) {
             includeProviderComponent('$provide', serviceName, 'withMocks');
             return this;
@@ -56,11 +61,9 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
          * Includes a service that replaces the dependencies specified in <em>toBeMockedDependencies</em> with mock
          * implementations.
          *
-         * NOTE: services from AngularJS itself will never be mocked.
-         *
          * @param {string} serviceName the name of the service to be registered
          * @param {...string} toBeMockedDependencies dependencies to be replaced with a mock implementation
-         * @returns {moduleIntrospectorFactory.ModuleBuilder} the module builder instance
+         * @returns {moduleBuilderFactory.ModuleBuilder} the module builder instance
          */
         this.serviceWithMocksFor = function(serviceName, toBeMockedDependencies) {
             toBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
@@ -68,7 +71,14 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
             return this;
         };
 
-        //TODO: comment
+        /**
+         * Includes a service that replaces its dependencies with mock implementations except those specified in
+         * <em>notToBeMockedDependencies</em>.
+         *
+         * @param {string} serviceName the name of the service to be registered
+         * @param {...string} notToBeMockedDependencies dependencies that should "not" be replaced with a mock implementation
+         * @returns {moduleBuilderFactory.ModuleBuilder} the module builder instance
+         */
         this.serviceWithMocksExcept = function(serviceName, notToBeMockedDependencies) {
             notToBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
             includeProviderComponent('$provide', serviceName, 'withMocks', 'except', notToBeMockedDependencies);
@@ -76,17 +86,11 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
         };
 
         /**
-         * Including an actual service (and not a mocked one) in the module
+         * Includes a filter that replaces all of its dependencies with mock implementations.
          *
-         * @param {string} serviceName name of the service to be included in the to be build module
-         * @returns {moduleIntrospectorFactory.ModuleBuilder}
+         * @param {string} filterName name of the filter to be included in the to be build module
+         * @returns {moduleBuilderFactory.ModuleBuilder} the module builder instance
          */
-        this.serviceAsIs = function(serviceName) {
-            includeProviderComponent('$provide', serviceName, 'asIs');
-            return this;
-        };
-
-        //TODO: comment
         this.filterWithMocks = function(filterName) {
             includeProviderComponent('$filterProvider', filterName, 'withMocks');
             return this;
@@ -96,46 +100,56 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
          * Includes a filter that replaces the dependencies specified in <em>toBeMockedDependencies</em> with mock
          * implementations.
          *
-         * NOTE: services from AngularJS itself will never be mocked
-         *
          * @param {string} filterName name of the filter to be included in the to be build module
          * @param {...string} toBeMockedDependencies dependencies to be replaced with a mock implementation
-         * @returns {moduleIntrospectorFactory.ModuleBuilder} the module builder instance
+         * @returns {moduleBuilderFactory.ModuleBuilder} the module builder instance
          */
         this.filterWithMocksFor = function(filterName, toBeMockedDependencies) {
+            toBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
             includeProviderComponent('$filterProvider', filterName, 'withMocks', 'for', toBeMockedDependencies);
             return this;
         };
 
-        //TODO: comment
+        /**
+         * Includes a filter that replaces its dependencies with mock implementations except those specified in
+         * <em>notToBeMockedDependencies</em>.
+         *
+         * @param {string} filterName name of the filter to be included in the to be build module
+         * @param {...string} notToBeMockedDependencies dependencies that should "not" be replaced with a mock implementation
+         * @returns {moduleBuilderFactory.ModuleBuilder} the module builder instance
+         */
         this.filterWithMocksExcept = function(filterName, notToBeMockedDependencies) {
+            notToBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
             includeProviderComponent('$filterProvider', filterName, 'withMocks', 'except', notToBeMockedDependencies);
             return this;
         };
 
-        /**
-         * Including an actual filter (and not a mocked one) in the module
-         *
-         * @param {string} filterName name of the filter to be included in the to be build module
-         * @returns {moduleIntrospectorFactory.ModuleBuilder}
-         */
-        this.filterAsIs = function(filterName) {
-            includeProviderComponent('$filterProvider', filterName, 'asIs');
-            return this;
-        };
+        //TODO: puts entry to the mockedFilters hash causing the $filter to return the mocked filter
+        //  (instead of the original one).
+        //TODO: should be using using '...WithMocks', '...WithMocksFor' and ''...WithMocksExcept' together with
+        //  'filterMock' the mock always be mocked? (i.e. also when nog included in '...WithMocks')
+//        this.filterMock = function(filterName) {
+//            // include a filter that can be found using "...FilterMock" (or not ?!?) and also through $filter('...')
+//        };
 
-        //TODO: comment
+        /**
+         * Includes a controller that replaces all of its dependencies with mock implementations.
+         *
+         * @param {string} controllerName name of the controller to be included in the to be build module
+         * @returns {moduleBuilderFactory.ModuleBuilder}
+         */
         this.controllerWithMocks = function(controllerName) {
             includeProviderComponent('$controllerProvider', controllerName, 'withMocks');
             return this;
         };
 
         /**
-         * Includes a controller that uses mocked service dependencies (instead of actual services) in the module.
+         * Includes a controller that replaces the dependencies specified in <em>toBeMockedDependencies</em> with mock
+         * implementations.
          *
          * @param {string} controllerName name of the controller to be included in the to be build module
          * @param {...string} toBeMockedDependencies dependencies to be replaced with a mock implementation
-         * @returns {moduleIntrospectorFactory.ModuleBuilder}
+         * @returns {moduleBuilderFactory.ModuleBuilder}
          */
         this.controllerWithMocksFor = function(controllerName, toBeMockedDependencies) {
             toBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
@@ -143,35 +157,46 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
             return this;
         };
 
-        //TODO: comment
-        this.controllerWithMocksExcept = function(controllerName, toBeMockedDependencies) {
-            includeProviderComponent('$controllerProvider', controllerName, 'withMocks', 'except', toBeMockedDependencies);
-            return this;
-        };
-
         /**
-         * Including an actual controller (and not a mocked one) in the module
+         * Includes a controller that replaces its dependencies with mock implementations except those specified in
+         * <em>notToBeMockedDependencies</em>.
          *
          * @param {string} controllerName name of the controller to be included in the to be build module
-         * @returns {moduleIntrospectorFactory.ModuleBuilder}
+         * @param {...string} notToBeMockedDependencies dependencies that should "not" be replaced with a mock implementation
+         * @returns {moduleBuilderFactory.ModuleBuilder}
          */
-        this.controllerAsIs = function(controllerName) {
-            includeProviderComponent('$controllerProvider', controllerName, 'asIs');
+        this.controllerWithMocksExcept = function(controllerName, notToBeMockedDependencies) {
+            notToBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
+            includeProviderComponent('$controllerProvider', controllerName, 'withMocks', 'except', notToBeMockedDependencies);
             return this;
         };
 
-        //TODO: comment
+        //TODO: puts entry to the mockedControllers hash causing the $controller to use the mocked controller
+        //  (instead of the original one).
+//        this.controllerMock = function(controllerName, controllerMockConfigurator) {
+//            // include a mocked controller; should support both "controller as" as traditional $scope-style
+//            //  TODO: how should I mock a $scope-style controller
+//            //  TODO: make sure that controllerMockConfigurator is optional
+//        };
+
+        /**
+         * Includes a directive that replaces all of its dependencies with mock implementations.
+         *
+         * @param {string} directiveName name of the controller to be included in the to be build module
+         * @returns {moduleBuilderFactory.ModuleBuilder}
+         */
         this.directiveWithMocks = function(directiveName) {
             includeProviderComponent('$compileProvider', directiveName, 'withMocks');
             return this;
         };
 
         /**
-         * Includes a directive that uses mocked service dependencies (instead of actual services) in the module.
+         * Includes a directive that replaces the dependencies specified in <em>toBeMockedDependencies</em> with mock
+         * implementations.
          *
          * @param {string} directiveName name of the controller to be included in the to be build module
          * @param {...string} toBeMockedDependencies dependencies to be replaced with a mock implementation
-         * @returns {moduleIntrospectorFactory.ModuleBuilder}
+         * @returns {moduleBuilderFactory.ModuleBuilder}
          */
         this.directiveWithMocksFor = function(directiveName, toBeMockedDependencies) {
             toBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
@@ -179,35 +204,46 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
             return this;
         };
 
-        //TODO: comment
-        this.directiveWithMocksExcept = function(directiveName, toBeMockedDependencies) {
-            includeProviderComponent('$compileProvider', directiveName, 'withMocks', 'except', toBeMockedDependencies);
+        /**
+         * Includes a directive that replaces its dependencies with mock implementations except those specified in
+         * <em>notToBeMockedDependencies</em>.
+         *
+         * @param {string} directiveName name of the controller to be included in the to be build module
+         * @param {...string} notToBeMockedDependencies dependencies that should "not" be replaced with a mock implementation
+         * @returns {moduleBuilderFactory.ModuleBuilder}
+         */
+        this.directiveWithMocksExcept = function(directiveName, notToBeMockedDependencies) {
+            notToBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
+            includeProviderComponent('$compileProvider', directiveName, 'withMocks', 'except', notToBeMockedDependencies);
             return this;
         };
+
+        //TODO: puts entry to the mockedDirectives hash causing the $compile to use the mocked directive
+        //  (instead of the original one).
+//        this.directiveMock = function(directiveName, directiveMockConfigurator) {
+//            // include a directive with a mocked controller but without any "link" or "compile" method;
+//            // should only work if there is exactly "one" directive with the provided directiveName that has a
+//            // (directive) controller
+//            //  TODO: make sure that directiveMockConfigurator is optional
+//        };
 
         /**
-         * Including an actual directive (and not a mocked one) in the module
+         * Includes a animation that replaces all of its dependencies with mock implementations.
          *
-         * @param {string} directiveName name of the directive to be included in the to be build module
-         * @returns {moduleIntrospectorFactory.ModuleBuilder}
+         * @param {string} animationName name of the controller to be included in the to be build module
+         * @returns {moduleBuilderFactory.ModuleBuilder}
          */
-        this.directiveAsIs = function(directiveName) {
-            includeProviderComponent('$compileProvider', directiveName, 'asIs');
-            return this;
-        };
-
-        //TODO: comment
         this.animationWithMocks = function(animationName) {
             includeProviderComponent('$animateProvider', animationName, 'withMocks');
             return this;
         };
 
         /**
-         * Includes a animation that uses mocked service dependencies (instead of actual services) in the module.
+         * Includes a animation that replaces the dependencies specified in <em>toBeMockedDependencies</em> with mock implementations.
          *
          * @param {string} animationName name of the controller to be included in the to be build module
          * @param {...string} toBeMockedDependencies dependencies to be replaced with a mock implementation
-         * @returns {moduleIntrospectorFactory.ModuleBuilder}
+         * @returns {moduleBuilderFactory.ModuleBuilder}
          */
         this.animationWithMocksFor = function(animationName, toBeMockedDependencies) {
             toBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
@@ -215,27 +251,22 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
             return this;
         };
 
-        //TODO: comment
-        this.animationWithMocksExcept = function(animationName, toBeMockedDependencies) {
-            includeProviderComponent('$animateProvider', animationName, 'withMocks', 'except', toBeMockedDependencies);
-            return this;
-        };
-
         /**
-         * Including an actual animation (and not a mocked one) in the module
+         * Includes a animation that replaces its dependencies with mock implementations except those specified in
+         * <em>notToBeMockedDependencies</em>.
          *
-         * @param {string} animationName name of the animation to be included in the to be build module
-         * @returns {moduleIntrospectorFactory.ModuleBuilder}
+         * @param {string} animationName name of the controller to be included in the to be build module
+         * @param {...string} notToBeMockedDependencies dependencies that should "not" be replaced with a mock implementation
+         * @returns {moduleBuilderFactory.ModuleBuilder}
          */
-        this.animationAsIs = function(animationName) {
-            includeProviderComponent('$animateProvider', animationName, 'asIs');
+        this.animationWithMocksExcept = function(animationName, notToBeMockedDependencies) {
+            notToBeMockedDependencies = Array.prototype.slice.call(arguments, 1);
+            includeProviderComponent('$animateProvider', animationName, 'withMocks', 'except', notToBeMockedDependencies);
             return this;
         };
 
-
         /**
-         * Builds ...
-         * @returns {Function}
+         * Builds the AngularJS module by invoking `angular.mock.module`.
          */
         this.build = function() {
 
@@ -259,52 +290,23 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
             }
 
 
-            var buildModuleName = 'generatedByNgImprovedTesting#' + numberOfBuildModules;
-
-            numberOfBuildModules += 1;
-
-
             var populateModuleComponents = configureProviders(function(providers) {
-                function handleAsIsComponentKind(toBeIncludedModuleComponent) {
-                    var providerName = toBeIncludedModuleComponent.providerName;
-                    var componentName = toBeIncludedModuleComponent.componentName;
-
-                    if (providerName === '$controllerProvider' || providerName === '$filterProvider' ||
-                        providerName === '$compileProvider' || providerName === '$animateProvider') {
-                        var providerComponentDeclaration =
-                            introspector.getProviderComponentDeclaration(providerName, componentName);
-
-                        angular.forEach(providerComponentDeclaration.injectedServices, function(injectedService) {
-                            if (injector.has(injectedService)) {
-                                asIsServices[injectedService] = injector.get(injectedService);
-                            }
-                        });
-
-                        declarations[componentName] = {
-                            providerName: providerName,
-                            providerMethod: providerComponentDeclaration.providerMethod,
-                            declaration: providerComponentDeclaration.rawDeclaration
-                        };
-                    } else if (providerName === '$provide') {
-                        asIsServices[componentName] = injector.get(componentName);
-                    } else {
-                        throw 'Unsupported provider: ' + providerName;
-                    }
-                }
 
                 function handleWithMocksComponentKind(toBeIncludedModuleComponent) {
                     var providerName = toBeIncludedModuleComponent.providerName;
                     var componentName = toBeIncludedModuleComponent.componentName;
 
-                    var providerComponentDeclaration =
-                        introspector.getProviderComponentDeclaration(providerName, componentName);
+                    var providerComponentDeclaration = getProviderComponentDeclaration(providerName, componentName);
+
+                    if (providerComponentDeclaration.builtIn) {
+                        throw 'Built-in components are not allowed to be overridden: ' + componentName;
+                    }
 
                     /** @type {(Array.<(string|Function)>|{$get: Array.<(string|Function)})} */
                     var annotatedDeclaration = [];
 
                     if (providerName === '$provide') {
-                        var providerMethod =
-                            introspector.getProviderComponentDeclaration('$provide', componentName).providerMethod;
+                        var providerMethod = providerComponentDeclaration.providerMethod;
 
                         if (providerMethod === 'constant' || providerMethod === 'value') {
                             throw 'Services declared with "contact" or "value" are not supported';
@@ -332,7 +334,7 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
                             if (toBeMocked) {
                                 mockedServices[injectedService] = injectedServiceInstance;
                             } else {
-                                asIsServices[injectedService] = injectedServiceInstance;
+                                nonMockedServices[injectedService] = injectedServiceInstance;
                             }
 
                             annotatedDeclaration.push(injectedService + (toBeMocked ? 'Mock' : ''));
@@ -342,7 +344,27 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
                     annotatedDeclaration.push(providerComponentDeclaration.strippedDeclaration);
 
                     if (providerName === '$provide' && providerComponentDeclaration.providerMethod === 'provider') {
-                        annotatedDeclaration = {$get: annotatedDeclaration};
+                        var $provideProviderDeclaration =
+                            introspector.getProviderDeclaration(componentName + 'Provider');
+
+                        if (angular.isFunction($provideProviderDeclaration.strippedDeclaration)) {
+                            var original$provideProviderFactory = $provideProviderDeclaration.strippedDeclaration;
+
+                            var originalAnnotatedDeclaration = annotatedDeclaration;
+
+                            var modified$ProvideProviderFactory = function() {
+                                var result = original$provideProviderFactory.apply(this, arguments);
+                                var instance = angular.isObject(result) ? result : this;
+                                instance.$get = originalAnnotatedDeclaration;
+                                return result;
+                            };
+
+                            annotatedDeclaration =
+                                Array.prototype.slice.call($provideProviderDeclaration.injectedProviders);
+                            annotatedDeclaration.push(modified$ProvideProviderFactory);
+                        } else {
+                            annotatedDeclaration = {$get: annotatedDeclaration};
+                        }
                     }
 
                     declarations[componentName] = {
@@ -350,6 +372,21 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
                         providerMethod: providerComponentDeclaration.providerMethod,
                         declaration: annotatedDeclaration
                     };
+                }
+
+                function getProviderComponentDeclaration(providerName, componentName) {
+                    var providerComponentDeclarations = introspector.getProviderComponentDeclarations(providerName, componentName);
+
+                    if (providerComponentDeclarations.length === 1) {
+                        return providerComponentDeclarations[0];
+                    } else if (providerComponentDeclarations.length === 2 && providerName === '$compileProvider' &&
+                            providerComponentDeclarations[0].builtIn) {
+                        return providerComponentDeclarations[1];
+                    } else {
+                        throw new Error('Could not determine unique component declaration for provider "' + providerName + '": ' +
+                                componentName);
+                    }
+
                 }
 
                 function dependencyShouldBeMocked(toBeIncludedModuleComponent, dependencyName) {
@@ -366,12 +403,18 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
                     }
                 }
 
+                function valueFn(value) {
+                    return function() {
+                        return value;
+                    };
+                }
+
+
+                /** @type Object.<Object> */
+                var nonMockedServices = {};
 
                 /** @type Object.<Object> */
                 var mockedServices = {};
-
-                /** @type Object.<Object> */
-                var asIsServices = {};
 
                 /**
                  * @type {Object.<{providerName: string, providerMethod: string, declaration: Array.<(string|Function)>}>}
@@ -379,25 +422,27 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
                 var declarations = {};
 
 
-                /** @type {angular.Module} */
-                var originalModule = angular.module(moduleName);
+                var injectorModules = ['ng', 'ngMock'];
 
-                var injector = /** @type {$injector} */ angular.injector(['ng', 'ngMock', moduleName]);
+                angular.forEach(modules, function(currentModule) {
+                    if (angular.isObject(currentModule) && !angular.isArray(currentModule)) {
+                        injectorModules.push(function($provide) {
+                            angular.forEach(currentModule, function(value, key) {
+                                $provide.value(key, value);
+                            });
+                        });
+                    } else {
+                        injectorModules.push(currentModule);
+                    }
+                });
 
-                var introspector = moduleIntrospector(moduleName);
+                var introspector = moduleIntrospector(modules, true);
 
-
-                var moduleRequires = originalModule.requires.slice(0);
-                moduleRequires.push('ngImprovedTesting');
-
-                //TODO: remove after we did fix #8
-                angular.module(buildModuleName, moduleRequires);
+                var injector = /** @type {$injector} */ angular.injector(injectorModules);
 
 
                 angular.forEach(toBeIncludedModuleComponents, function(toBeIncludedModuleComponent) {
-                    if (toBeIncludedModuleComponent.componentKind === 'asIs') {
-                        handleAsIsComponentKind(toBeIncludedModuleComponent);
-                    } else if (toBeIncludedModuleComponent.componentKind === 'withMocks') {
+                    if (toBeIncludedModuleComponent.componentKind === 'withMocks') {
                         handleWithMocksComponentKind(toBeIncludedModuleComponent);
                     }
                 });
@@ -408,17 +453,38 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
                     providers.$provide.value(serviceName + 'Mock', mockedService);
                 });
 
-                angular.forEach(asIsServices, function (originalService, serviceName) {
-                    providers.$provide.value(serviceName, originalService);
+                angular.forEach(declarations, function (declarationInfo, declarationName) {
+                    if (declarationInfo.providerName !== '$compileProvider') {
+                        providers[declarationInfo.providerName][declarationInfo.providerMethod](
+                            declarationName, declarationInfo.declaration);
+                    } else {
+                        providers.$provide.decorator(declarationName + 'Directive', function($delegate, $injector) {
+                            var index = $delegate.length === 1 ? 0 : 1;
+
+                            var directive = $injector.invoke(declarationInfo.declaration);
+
+                            if (angular.isFunction(directive)) {
+                                $delegate[index].compile = valueFn(directive);
+                            } else if (!directive.compile && directive.link) {
+                                $delegate[index].compile = valueFn(directive.link);
+                            } else if (directive.compile) {
+                                $delegate[index].compile = directive.compile;
+                            }
+
+                            if (directive.controller) {
+                                $delegate[index].controller = directive.controller;
+                            }
+
+                            return $delegate;
+                        });
+                    }
                 });
 
-                angular.forEach(declarations, function (declarationInfo, declarationName) {
-                    providers[declarationInfo.providerName][declarationInfo.providerMethod](
-                        declarationName, declarationInfo.declaration);
-                });
+                providers.$provide.value('ngImprovedTestingNonMockedServices', nonMockedServices);
+                providers.$provide.value('ngImprovedTestingMockedServices', mockedServices);
             });
 
-            return angular.mock.module(populateModuleComponents, buildModuleName);
+            return angular.mock.module.apply(undefined, [].concat(modules).concat([populateModuleComponents, 'ngImprovedTesting']));
         };
 
     }
@@ -430,11 +496,23 @@ function moduleIntrospectorFactory(moduleIntrospector, mockCreator) {
     return {
         /**
          * @name moduleBuilder#forModule
-         * @param {string} moduleName
-         * @returns {moduleIntrospectorFactory.ModuleBuilder}
+         * @param {string|Function|Object} module
+         * @returns {moduleBuilderFactory.ModuleBuilder}
+         * @deprecated use {@link #forModules} instead
          */
-        forModule: function(moduleName) {
-            return new ModuleBuilder(moduleName);
+        forModule: function(module) {
+            return new ModuleBuilder([module]);
+        },
+
+        /**
+         * @name moduleBuilder#forModules
+         * @param {...(string|Function|Object)} modules
+         * @returns {moduleBuilderFactory.ModuleBuilder}
+         */
+        forModules: function(modules) {
+            modules = Array.prototype.slice.call(arguments);
+
+            return new ModuleBuilder(modules);
         }
     };
 
@@ -445,4 +523,4 @@ angular.module('ngImprovedTesting.internal.moduleBuilder', [
         'ngModuleIntrospector',
         'ngImprovedTesting.internal.mockCreator'
     ])
-    .factory('moduleBuilder', moduleIntrospectorFactory);
+    .factory('moduleBuilder', moduleBuilderFactory);
