@@ -1,7 +1,7 @@
 var sharedConfig = require('./karma-shared.conf');
 
 module.exports = function(config) {
-    sharedConfig(config, {testName: 'ngImprovedTesting: AngularJS 1.3.x', logFile: 'karma-angular-1.3.log'});
+    sharedConfig(config, {testName: 'ngImprovedTesting: AngularJS 1.4.x', logFile: 'karma-angular-1.4.log'});
 
     config.set({
 
