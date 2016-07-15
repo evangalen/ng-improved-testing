@@ -21,7 +21,8 @@
     "karma-script-launcher": "1.0.0",
     "lcov-result-merger": "1.2.0",
     "load-grunt-tasks": "3.5.0",
-    "phantomjs": "1.9.20"
+    "phantomjs": "1.9.20",
+    "phantomjs-polyfill": "0.0.2"
   },
   "scripts": {
     "postinstall": "./node_modules/.bin/bower install",

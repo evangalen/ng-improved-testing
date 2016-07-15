@@ -1,0 +1,29 @@
+var sharedConfig = require('./karma-shared.conf');
+
+module.exports = function(config) {
+    sharedConfig(config, {testName: 'ngImprovedTesting: AngularJS 1.5.x', logFile: 'karma-angular-1.5.log'});
+
+    config.set({
+
+        // list of files / patterns to load in the browser
+        files: [
+            //TODO: remove next line after succesfully upgrading to latest PhantomJS 2.x
+            'node_modules/phantomjs-polyfill/bind-polyfill.js',
+
+            'bower_components/angular-1.5/angular.js',
+            'bower_components/ng-module-introspector/ng-module-introspector.js',
+            'bower_components/angular-mocks-1.5/angular-mocks.js',
+            'src/module.js',
+            'src/config.js',
+            'src/mockCreator.js',
+            'src/moduleBuilder.js',
+            'src/mockInject.js',
+            'src/$q.js',
+            'src/exports.js',
+            'bower_components/angular-animation-1.5/angular-animate.js',
+            'test/!(moduleDeclaredAfterLoadedAllSpecs).js',
+            'test/moduleDeclaredAfterLoadedAllSpecs.js'
+        ]
+
+    });
+};
