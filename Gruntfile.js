@@ -65,10 +65,10 @@ module.exports = function(grunt) {
                 }
             },
             angular_1_4: {
-                configFile: 'karma-angular-1.4-nightly.conf.js',
+                configFile: 'karma-angular-1.4.conf.js',
                 coverageReporter: {
                     type: 'lcov',
-                    dir: 'coverage/karma-angular-1.4-nightly'
+                    dir: 'coverage/karma-angular-1.4'
                 }
             }
         },

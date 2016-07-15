@@ -7,9 +7,9 @@ module.exports = function(config) {
 
         // list of files / patterns to load in the browser
         files: [
-            'bower_components/angular-1.4-nightly/angular.js',
+            'bower_components/angular-1.4/angular.js',
             'bower_components/ng-module-introspector/ng-module-introspector.js',
-            'bower_components/angular-mocks-1.4-nightly/angular-mocks.js',
+            'bower_components/angular-mocks-1.4/angular-mocks.js',
             'src/module.js',
             'src/config.js',
             'src/mockCreator.js',
@@ -17,7 +17,7 @@ module.exports = function(config) {
             'src/mockInject.js',
             'src/$q.js',
             'src/exports.js',
-            'bower_components/angular-animation-1.3/angular-animate.js',
+            'bower_components/angular-animation-1.4/angular-animate.js',
             'test/!(moduleDeclaredAfterLoadedAllSpecs).js',
             'test/moduleDeclaredAfterLoadedAllSpecs.js'
         ]

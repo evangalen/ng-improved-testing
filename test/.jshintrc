@@ -35,6 +35,9 @@
         "spyOn": false,
         "jasmine": false,
         "expect": false,
-        "window": false
+        "window": false,
+
+        //TODO: remove all these once the tests once again 100% complete
+        "xit": false
     }
 }
