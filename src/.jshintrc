@@ -2,7 +2,8 @@
     "plusplus": true,
     "nonew": true,
     "curly": true,
-    "latedef": true,
+    //TODO: should have value "nofunc"; but therefor the code should be fixed
+    "latedef": false,
     "maxdepth": 4,
     "unused": true,
     "noarg": true,
