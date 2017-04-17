@@ -6,14 +6,17 @@ var ngImprovedTestingConfigFlags = {
 };
 
 var ngImprovedTestingConfig = {
-    $qTickEnable: function() {
-        afterEach(function() {
-            ngImprovedTestingConfigFlags.$qTick = false;
+    $setQTickDefault: function (isEnableAtDefault) {
+        beforeEach(function() {
+            console.log('ngImprovedTestingConfig.$qTickDefault', ngImprovedTestingConfig.$qTickDefault);
+            ngImprovedTestingConfigFlags.$qTick = isEnableAtDefault;
         });
-
-        return function() {
-            ngImprovedTestingConfigFlags.$qTick = true;
-        };
+    },
+    $qTickEnable: function() {
+        ngImprovedTestingConfigFlags.$qTick = true;
+    },
+    $qTickDisable: function() {
+        ngImprovedTestingConfigFlags.$qTick = false;
     }
 };
 
